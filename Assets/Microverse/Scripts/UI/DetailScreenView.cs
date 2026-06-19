@@ -14,6 +14,7 @@ namespace Microverse.UI
         private readonly IReadOnlyList<BiologicalModel> models;
         private readonly MicroverseLanguage language;
         private readonly Action onBack;
+        private readonly Func<string, string> getText;
         private int currentIndex;
         private Image mainVisual;
         private TextMeshProUGUI title;
@@ -24,11 +25,12 @@ namespace Microverse.UI
         private TextMeshProUGUI sideLeft;
         private TextMeshProUGUI sideRight;
 
-        public DetailScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, BiologicalModel selected, MicroverseLanguage language, Action onBack)
+        public DetailScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, BiologicalModel selected, MicroverseLanguage language, Action onBack, Func<string, string> getText)
         {
             this.models = models;
             this.language = language;
             this.onBack = onBack;
+            this.getText = getText;
             currentIndex = Mathf.Max(0, IndexOf(selected));
 
             Root = new GameObject("DetailScreen", typeof(RectTransform));
@@ -53,7 +55,7 @@ namespace Microverse.UI
             logoRect.anchoredPosition = new Vector2(42f, -26f);
             logoRect.sizeDelta = new Vector2(330f, 110f);
 
-            Button back = UiFactory.Button("Back", Root.transform, "<  " + TextFor("Tipos de celulas", "Types of Cells", "Tipos de celulas"), () => onBack(), new Color(0f, 0f, 0f, 0f), MicroverseTheme.Text, 25);
+            Button back = UiFactory.Button("Back", Root.transform, "<  " + getText("detail.back.types"), () => onBack(), new Color(0f, 0f, 0f, 0f), MicroverseTheme.Text, 25);
             RectTransform backRect = back.GetComponent<RectTransform>();
             backRect.anchorMin = new Vector2(0f, 1f);
             backRect.anchorMax = new Vector2(0f, 1f);
@@ -61,7 +63,7 @@ namespace Microverse.UI
             backRect.anchoredPosition = new Vector2(38f, -166f);
             backRect.sizeDelta = new Vector2(340f, 70f);
 
-            Button categories = UiFactory.Button("Categories", Root.transform, TextFor("Categorias", "Categories", "Categorias"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
+            Button categories = UiFactory.Button("Categories", Root.transform, getText("detail.categories"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
             RectTransform categoriesRect = categories.GetComponent<RectTransform>();
             categoriesRect.anchorMin = new Vector2(1f, 1f);
             categoriesRect.anchorMax = new Vector2(1f, 1f);
@@ -69,7 +71,7 @@ namespace Microverse.UI
             categoriesRect.anchoredPosition = new Vector2(-42f, -162f);
             categoriesRect.sizeDelta = new Vector2(220f, 64f);
 
-            Button search = UiFactory.Button("SearchButton", Root.transform, "Search", () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
+            Button search = UiFactory.Button("SearchButton", Root.transform, getText("common.search"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
             RectTransform searchRect = search.GetComponent<RectTransform>();
             searchRect.anchorMin = new Vector2(1f, 1f);
             searchRect.anchorMax = new Vector2(1f, 1f);
@@ -77,7 +79,7 @@ namespace Microverse.UI
             searchRect.anchoredPosition = new Vector2(-152f, -34f);
             searchRect.sizeDelta = new Vector2(104f, 70f);
 
-            Button settings = UiFactory.Button("Settings", Root.transform, "Menu", () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
+            Button settings = UiFactory.Button("Settings", Root.transform, getText("common.menu"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
             RectTransform settingsRect = settings.GetComponent<RectTransform>();
             settingsRect.anchorMin = new Vector2(1f, 1f);
             settingsRect.anchorMax = new Vector2(1f, 1f);
@@ -157,7 +159,7 @@ namespace Microverse.UI
             nextRect.anchoredPosition = new Vector2(-132f, 100f);
             nextRect.sizeDelta = new Vector2(96f, 96f);
 
-            TextMeshProUGUI hint = UiFactory.Text("Hint", Root.transform, TextFor("Desliza para explorar", "Swipe to explore", "Deslize para explorar"), 22, FontStyles.Normal, MicroverseTheme.MutedText, TextAlignmentOptions.Center);
+            TextMeshProUGUI hint = UiFactory.Text("Hint", Root.transform, getText("detail.swipe"), 22, FontStyles.Normal, MicroverseTheme.MutedText, TextAlignmentOptions.Center);
             RectTransform hintRect = hint.rectTransform;
             hintRect.anchorMin = new Vector2(0f, 1f);
             hintRect.anchorMax = new Vector2(1f, 1f);
@@ -167,7 +169,7 @@ namespace Microverse.UI
 
         private void BuildActions()
         {
-            Button view3d = UiFactory.Button("View3D", Root.transform, TextFor("Ver en 3D", "View in 3D", "Ver em 3D"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 26);
+            Button view3d = UiFactory.Button("View3D", Root.transform, getText("detail.view_3d"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 26);
             RectTransform view3dRect = view3d.GetComponent<RectTransform>();
             view3dRect.anchorMin = new Vector2(0f, 0f);
             view3dRect.anchorMax = new Vector2(0f, 0f);
@@ -175,7 +177,7 @@ namespace Microverse.UI
             view3dRect.anchoredPosition = new Vector2(128f, 386f);
             view3dRect.sizeDelta = new Vector2(280f, 86f);
 
-            Button viewAr = UiFactory.Button("ViewAR", Root.transform, TextFor("Ver en RA", "View in AR", "Ver em RA"), () => { }, new Color(0.0f, 0.42f, 0.68f, 0.96f), MicroverseTheme.Text, 26);
+            Button viewAr = UiFactory.Button("ViewAR", Root.transform, getText("detail.view_ar"), () => { }, new Color(0.0f, 0.42f, 0.68f, 0.96f), MicroverseTheme.Text, 26);
             RectTransform viewArRect = viewAr.GetComponent<RectTransform>();
             viewArRect.anchorMin = new Vector2(1f, 0f);
             viewArRect.anchorMax = new Vector2(1f, 0f);
@@ -207,7 +209,7 @@ namespace Microverse.UI
             bodyRect.offsetMin = new Vector2(38f, 22f);
             bodyRect.offsetMax = new Vector2(-270f, -72f);
 
-            Button details = UiFactory.Button("Details", card.transform, TextFor("Detalles", "Details", "Detalhes"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
+            Button details = UiFactory.Button("Details", card.transform, getText("common.details"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
             RectTransform detailsRect = details.GetComponent<RectTransform>();
             detailsRect.anchorMin = new Vector2(1f, 0.5f);
             detailsRect.anchorMax = new Vector2(1f, 0.5f);
@@ -226,7 +228,7 @@ namespace Microverse.UI
             subtitle.text = current.Subtitle.Get(language);
             counter.text = (currentIndex + 1) + " / " + models.Count;
             mainVisual.sprite = BiologyVisualFactory.CreateModelSprite(current);
-            aboutTitle.text = TextFor("Acerca de ", "About ", "Sobre ") + current.Name.Get(language);
+            aboutTitle.text = getText("detail.about_prefix") + current.Name.Get(language);
             aboutBody.text = current.Description.Get(language);
             sideLeft.text = previous.Name.Get(language) + "\n" + ((currentIndex - 1 + models.Count) % models.Count + 1) + " / " + models.Count;
             sideRight.text = next.Name.Get(language) + "\n" + ((currentIndex + 1) % models.Count + 1) + " / " + models.Count;
@@ -257,17 +259,5 @@ namespace Microverse.UI
             return 0;
         }
 
-        private string TextFor(string spanish, string english, string portuguese)
-        {
-            switch (language)
-            {
-                case MicroverseLanguage.English:
-                    return english;
-                case MicroverseLanguage.Portuguese:
-                    return portuguese;
-                default:
-                    return spanish;
-            }
-        }
     }
 }

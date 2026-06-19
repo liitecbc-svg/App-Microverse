@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Microverse.Data;
 using Microverse.Services;
 using TMPro;
@@ -12,8 +12,10 @@ namespace Microverse.UI
     {
         private IModelCatalogService catalogService;
         private ITranslationService translationService;
+        private UiTextCatalog uiTextCatalog;
         private IReadOnlyList<BiologicalModel> models;
         private readonly HashSet<MicroverseLanguage> translatedLanguages = new HashSet<MicroverseLanguage>();
+        private readonly HashSet<MicroverseLanguage> pendingTranslationLanguages = new HashSet<MicroverseLanguage>();
         private MicroverseLanguage language = MicroverseLanguage.Spanish;
         private RectTransform screenRoot;
         private BottomNavigationBar navigationBar;
@@ -25,6 +27,7 @@ namespace Microverse.UI
         {
             catalogService = new LocalModelCatalogService();
             translationService = new AndroidMlKitTranslationService();
+            uiTextCatalog = new UiTextCatalog();
             models = catalogService.GetModels();
             selectedModel = models.Count > 0 ? models[0] : null;
             BuildCanvas();
@@ -79,7 +82,7 @@ namespace Microverse.UI
             screenRoot = screenRootGo.GetComponent<RectTransform>();
             UiFactory.Stretch(screenRoot);
 
-            navigationBar = new BottomNavigationBar(canvasGo.transform, HandleNavigation);
+            navigationBar = new BottomNavigationBar(canvasGo.transform, HandleNavigation, GetUiText);
             navigationBar.SetSelected("home");
         }
 
@@ -105,8 +108,9 @@ namespace Microverse.UI
         {
             activeTab = "home";
             ClearScreen();
-            HomeScreenView home = new HomeScreenView(screenRoot, models, language, ShowDetail, CycleLanguage);
+            HomeScreenView home = new HomeScreenView(screenRoot, models, language, ShowDetail, CycleLanguage, GetUiText);
             activeScreen = home.Root;
+            navigationBar.RefreshLabels();
             navigationBar.SetSelected("home");
         }
 
@@ -115,8 +119,9 @@ namespace Microverse.UI
             selectedModel = model;
             activeTab = "scan";
             ClearScreen();
-            DetailScreenView detail = new DetailScreenView(screenRoot, models, model, language, ShowHome);
+            DetailScreenView detail = new DetailScreenView(screenRoot, models, model, language, ShowHome, GetUiText);
             activeScreen = detail.Root;
+            navigationBar.RefreshLabels();
             navigationBar.SetSelected("scan");
         }
 
@@ -151,6 +156,8 @@ namespace Microverse.UI
             bodyRect.anchorMax = new Vector2(1f, 1f);
             bodyRect.offsetMin = new Vector2(56f, 86f);
             bodyRect.offsetMax = new Vector2(-56f, -170f);
+
+            navigationBar.RefreshLabels();
         }
 
         private void CycleLanguage()
@@ -181,12 +188,14 @@ namespace Microverse.UI
                 ShowPlaceholder(activeTab);
             }
 
-            TranslateCatalogIfNeeded(language);
+            TranslateLanguageIfNeeded(language);
         }
 
-        private void TranslateCatalogIfNeeded(MicroverseLanguage targetLanguage)
+        private void TranslateLanguageIfNeeded(MicroverseLanguage targetLanguage)
         {
-            if (targetLanguage == MicroverseLanguage.Spanish || translatedLanguages.Contains(targetLanguage))
+            if (targetLanguage == MicroverseLanguage.Spanish ||
+                translatedLanguages.Contains(targetLanguage) ||
+                pendingTranslationLanguages.Contains(targetLanguage))
             {
                 return;
             }
@@ -196,10 +205,18 @@ namespace Microverse.UI
                 return;
             }
 
+            pendingTranslationLanguages.Add(targetLanguage);
             List<TranslationRequest> requests = new List<TranslationRequest>();
             List<Action<string>> applyTranslatedText = new List<Action<string>>();
             string source = MicroverseLanguage.Spanish.ToLanguageCode();
             string target = targetLanguage.ToLanguageCode();
+
+            foreach (string key in uiTextCatalog.Keys)
+            {
+                string uiText = uiTextCatalog.GetSpanish(key);
+                requests.Add(new TranslationRequest(uiText, source, target));
+                applyTranslatedText.Add(translated => uiTextCatalog.Set(targetLanguage, key, translated));
+            }
 
             foreach (BiologicalModel model in models)
             {
@@ -218,6 +235,7 @@ namespace Microverse.UI
                         applyTranslatedText[i](translations[i]);
                     }
 
+                    pendingTranslationLanguages.Remove(targetLanguage);
                     translatedLanguages.Add(targetLanguage);
                     if (language == targetLanguage)
                     {
@@ -226,6 +244,7 @@ namespace Microverse.UI
                 },
                 error =>
                 {
+                    pendingTranslationLanguages.Remove(targetLanguage);
                     Debug.LogWarning("Automatic translation unavailable. Keeping local text. " + error);
                 });
         }
@@ -245,6 +264,8 @@ namespace Microverse.UI
 
         private void RefreshCurrentScreen()
         {
+            navigationBar.RefreshLabels();
+
             if (activeTab == "scan" && selectedModel != null)
             {
                 ShowDetail(selectedModel);
@@ -259,6 +280,11 @@ namespace Microverse.UI
             }
         }
 
+        private string GetUiText(string key)
+        {
+            return uiTextCatalog.Get(key, language);
+        }
+
         private void ClearScreen()
         {
             if (activeScreen != null)
@@ -271,65 +297,40 @@ namespace Microverse.UI
         {
             if (tab == "categories")
             {
-                return TextFor("Categorias", "Categories", "Categorias");
+                return GetUiText("placeholder.categories.title");
             }
 
             if (tab == "learn")
             {
-                return TextFor("Manual de uso", "Learning Guide", "Guia de uso");
+                return GetUiText("placeholder.learn.title");
             }
 
             if (tab == "profile")
             {
-                return TextFor("Creditos", "Credits", "Creditos");
+                return GetUiText("placeholder.profile.title");
             }
 
-            return TextFor("Modulo AR", "AR Module", "Modulo RA");
+            return GetUiText("placeholder.ar.title");
         }
 
         private string PlaceholderBody(string tab)
         {
             if (tab == "categories")
             {
-                return TextFor(
-                    "Aqui se organizara el catalogo por clasificacion taxonomica cuando el backend entregue filtros.",
-                    "The catalog will be organized here by taxonomic classification when backend filters are available.",
-                    "Aqui o catalogo sera organizado por classificacao taxonomica quando o backend entregar filtros.");
+                return GetUiText("placeholder.categories.body");
             }
 
             if (tab == "learn")
             {
-                return TextFor(
-                    "Espacio reservado para el manual integrado y la guia rapida de despliegue RA.",
-                    "Reserved space for the integrated manual and quick AR start guide.",
-                    "Espaco reservado para o manual integrado e guia rapida de RA.");
+                return GetUiText("placeholder.learn.body");
             }
 
             if (tab == "profile")
             {
-                return TextFor(
-                    "Seccion preparada para logos ULS, LIITEC, Dra. Cassia Yano y colaboradores.",
-                    "Section prepared for ULS, LIITEC, Dr. Cassia Yano, and collaborators.",
-                    "Secao preparada para ULS, LIITEC, Dra. Cassia Yano e colaboradores.");
+                return GetUiText("placeholder.profile.body");
             }
 
-            return TextFor(
-                "La vista AR queda lista para conectarse luego con marcadores fisicos, organelos tocables y descarga dinamica de modelos.",
-                "The AR view is ready to later connect physical markers, tappable organelles, and dynamic model downloads.",
-                "A vista RA fica pronta para conectar marcadores fisicos, organelas tocaveis e downloads dinamicos.");
-        }
-
-        private string TextFor(string spanish, string english, string portuguese)
-        {
-            switch (language)
-            {
-                case MicroverseLanguage.English:
-                    return english;
-                case MicroverseLanguage.Portuguese:
-                    return portuguese;
-                default:
-                    return spanish;
-            }
+            return GetUiText("placeholder.ar.body");
         }
     }
 }

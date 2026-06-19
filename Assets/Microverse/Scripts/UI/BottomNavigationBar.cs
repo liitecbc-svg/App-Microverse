@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,11 +10,14 @@ namespace Microverse.UI
     {
         private readonly GameObject root;
         private readonly Action<string> onSelect;
+        private readonly Func<string, string> getText;
+        private readonly Dictionary<string, TextMeshProUGUI> labels = new Dictionary<string, TextMeshProUGUI>();
         private string selected = "home";
 
-        public BottomNavigationBar(Transform parent, Action<string> onSelect)
+        public BottomNavigationBar(Transform parent, Action<string> onSelect, Func<string, string> getText)
         {
             this.onSelect = onSelect;
+            this.getText = getText;
             root = UiFactory.Panel("BottomNavigation", parent, new Color(0.01f, 0.04f, 0.10f, 0.96f), 28);
             RectTransform rect = root.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 0f);
@@ -29,11 +33,11 @@ namespace Microverse.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            AddTab("home", "Home");
-            AddTab("categories", "Categorias");
-            AddTab("scan", "Scan AR");
-            AddTab("learn", "Aprender");
-            AddTab("profile", "Perfil");
+            AddTab("home", "nav.home");
+            AddTab("categories", "nav.categories");
+            AddTab("scan", "nav.scan");
+            AddTab("learn", "nav.learn");
+            AddTab("profile", "nav.profile");
         }
 
         public void SetSelected(string id)
@@ -50,15 +54,24 @@ namespace Microverse.UI
             }
         }
 
-        private void AddTab(string id, string label)
+        public void RefreshLabels()
         {
-            Button button = UiFactory.Button(id, root.transform, label, () =>
+            foreach (KeyValuePair<string, TextMeshProUGUI> entry in labels)
+            {
+                entry.Value.text = getText(entry.Key);
+            }
+        }
+
+        private void AddTab(string id, string textKey)
+        {
+            Button button = UiFactory.Button(id, root.transform, getText(textKey), () =>
             {
                 selected = id;
                 SetSelected(id);
                 onSelect(id);
             }, new Color(0f, 0f, 0f, 0f), MicroverseTheme.Text, id == "scan" ? 24 : 20);
             button.name = id;
+            labels[textKey] = button.GetComponentInChildren<TextMeshProUGUI>();
             RectTransform rect = button.GetComponent<RectTransform>();
             rect.sizeDelta = id == "scan" ? new Vector2(190f, 110f) : new Vector2(160f, 96f);
         }

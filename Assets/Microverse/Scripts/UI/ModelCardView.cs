@@ -10,7 +10,7 @@ namespace Microverse.UI
     {
         public GameObject Root { get; private set; }
 
-        public ModelCardView(Transform parent, BiologicalModel model, MicroverseLanguage language, Action<BiologicalModel> onOpen)
+        public ModelCardView(Transform parent, BiologicalModel model, MicroverseLanguage language, Action<BiologicalModel> onOpen, Func<string, string> getText)
         {
             Root = UiFactory.Panel("ModelCard-" + model.Id, parent, new Color(0.02f, 0.06f, 0.14f, 0.94f), 22);
             Image frame = Root.GetComponent<Image>();
@@ -31,7 +31,7 @@ namespace Microverse.UI
             visualRect.offsetMin = new Vector2(14f, 0f);
             visualRect.offsetMax = new Vector2(-14f, -12f);
 
-            TextMeshProUGUI favorite = UiFactory.Text("Favorite", Root.transform, "Fav", 18, FontStyles.Bold, MicroverseTheme.MutedText, TextAlignmentOptions.Center);
+            TextMeshProUGUI favorite = UiFactory.Text("Favorite", Root.transform, getText("model.favorite"), 18, FontStyles.Bold, MicroverseTheme.MutedText, TextAlignmentOptions.Center);
             RectTransform favRect = favorite.rectTransform;
             favRect.anchorMin = new Vector2(1f, 1f);
             favRect.anchorMax = new Vector2(1f, 1f);
@@ -53,7 +53,7 @@ namespace Microverse.UI
             subtitleRect.offsetMin = new Vector2(20f, 60f);
             subtitleRect.offsetMax = new Vector2(-18f, 90f);
 
-            Button arButton = UiFactory.Button("ViewAr", Root.transform, "View in AR", () => onOpen(model), new Color(0.03f, 0.10f, 0.22f, 0.95f), MicroverseTheme.Cyan, 20);
+            Button arButton = UiFactory.Button("ViewAr", Root.transform, getText("model.view_ar"), () => onOpen(model), new Color(0.03f, 0.10f, 0.22f, 0.95f), MicroverseTheme.Cyan, 20);
             RectTransform arRect = arButton.GetComponent<RectTransform>();
             arRect.anchorMin = new Vector2(0f, 0f);
             arRect.anchorMax = new Vector2(1f, 0f);

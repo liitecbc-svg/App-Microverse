@@ -16,16 +16,18 @@ namespace Microverse.UI
         private readonly MicroverseLanguage language;
         private readonly Action<BiologicalModel> onOpenModel;
         private readonly Action onCycleLanguage;
+        private readonly Func<string, string> getText;
         private readonly Transform gridContent;
         private string searchTerm = string.Empty;
         private string categoryFilter = string.Empty;
 
-        public HomeScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, MicroverseLanguage language, Action<BiologicalModel> onOpenModel, Action onCycleLanguage)
+        public HomeScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, MicroverseLanguage language, Action<BiologicalModel> onOpenModel, Action onCycleLanguage, Func<string, string> getText)
         {
             this.models = models;
             this.language = language;
             this.onOpenModel = onOpenModel;
             this.onCycleLanguage = onCycleLanguage;
+            this.getText = getText;
 
             Root = new GameObject("HomeScreen", typeof(RectTransform));
             Root.transform.SetParent(parent, false);
@@ -49,7 +51,7 @@ namespace Microverse.UI
             logoRect.anchoredPosition = new Vector2(54f, -34f);
             logoRect.sizeDelta = new Vector2(360f, 110f);
 
-            Button search = UiFactory.Button("SearchButton", Root.transform, "Search", () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
+            Button search = UiFactory.Button("SearchButton", Root.transform, getText("common.search"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
             RectTransform searchRect = search.GetComponent<RectTransform>();
             searchRect.anchorMin = new Vector2(1f, 1f);
             searchRect.anchorMax = new Vector2(1f, 1f);
@@ -65,7 +67,7 @@ namespace Microverse.UI
             settingsRect.anchoredPosition = new Vector2(-42f, -44f);
             settingsRect.sizeDelta = new Vector2(96f, 70f);
 
-            TextMeshProUGUI hero = UiFactory.Text("Hero", Root.transform, HeroText(), 32, FontStyles.Bold, MicroverseTheme.Text);
+            TextMeshProUGUI hero = UiFactory.Text("Hero", Root.transform, getText("home.hero"), 32, FontStyles.Bold, MicroverseTheme.Text);
             RectTransform heroRect = hero.rectTransform;
             heroRect.anchorMin = new Vector2(0f, 1f);
             heroRect.anchorMax = new Vector2(1f, 1f);
@@ -90,15 +92,15 @@ namespace Microverse.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            AddFeature(row.transform, "AR Viewer", "View in your space", true);
-            AddFeature(row.transform, "3D Library", "Explore in 3D", false);
-            AddFeature(row.transform, "Quiz", "Test knowledge", false);
-            AddFeature(row.transform, "Favorites", "Saved models", false);
+            AddFeature(row.transform, getText("home.feature.ar.title"), getText("home.feature.ar.subtitle"), true);
+            AddFeature(row.transform, getText("home.feature.library.title"), getText("home.feature.library.subtitle"), false);
+            AddFeature(row.transform, getText("home.feature.quiz.title"), getText("home.feature.quiz.subtitle"), false);
+            AddFeature(row.transform, getText("home.feature.favorites.title"), getText("home.feature.favorites.subtitle"), false);
         }
 
         private void BuildSearchAndFilters()
         {
-            TMP_InputField input = UiFactory.Input("SearchInput", Root.transform, PlaceholderText());
+            TMP_InputField input = UiFactory.Input("SearchInput", Root.transform, getText("home.search.placeholder"));
             RectTransform inputRect = input.GetComponent<RectTransform>();
             inputRect.anchorMin = new Vector2(0f, 1f);
             inputRect.anchorMax = new Vector2(1f, 1f);
@@ -125,16 +127,16 @@ namespace Microverse.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            AddFilter(filters.transform, TextFor("Todos", "All", "Todos"), string.Empty);
-            AddFilter(filters.transform, TextFor("Celulas", "Cells", "Celulas"), "cell");
-            AddFilter(filters.transform, TextFor("Protozoos", "Protozoans", "Protozoarios"), "proto");
-            AddFilter(filters.transform, TextFor("Virus", "Viruses", "Virus"), "virus");
-            AddFilter(filters.transform, TextFor("Bacterias", "Bacteria", "Bacterias"), "bacter");
+            AddFilter(filters.transform, getText("home.filter.all"), string.Empty);
+            AddFilter(filters.transform, getText("home.filter.cells"), "cell");
+            AddFilter(filters.transform, getText("home.filter.protozoans"), "proto");
+            AddFilter(filters.transform, getText("home.filter.viruses"), "virus");
+            AddFilter(filters.transform, getText("home.filter.bacteria"), "bacter");
         }
 
         private Transform BuildCatalogGrid()
         {
-            TextMeshProUGUI title = UiFactory.Text("SectionTitle", Root.transform, TextFor("Explora vida en miniatura", "Explore Life in Miniature", "Explore a vida em miniatura"), 28, FontStyles.Bold, MicroverseTheme.Text);
+            TextMeshProUGUI title = UiFactory.Text("SectionTitle", Root.transform, getText("home.section.life"), 28, FontStyles.Bold, MicroverseTheme.Text);
             RectTransform titleRect = title.rectTransform;
             titleRect.anchorMin = new Vector2(0f, 1f);
             titleRect.anchorMax = new Vector2(1f, 1f);
@@ -192,7 +194,7 @@ namespace Microverse.UI
             IEnumerable<BiologicalModel> filtered = models.Where(MatchesSearch).Where(MatchesCategory);
             foreach (BiologicalModel model in filtered)
             {
-                new ModelCardView(gridContent, model, language, onOpenModel);
+                new ModelCardView(gridContent, model, language, onOpenModel, getText);
             }
         }
 
@@ -214,7 +216,13 @@ namespace Microverse.UI
                 return true;
             }
 
-            string value = (model.Category.Get(language) + " " + model.Subtitle.Get(language)).ToLowerInvariant();
+            string value = (
+                model.Category.Get(MicroverseLanguage.Spanish) + " " +
+                model.Category.Get(MicroverseLanguage.English) + " " +
+                model.Category.Get(MicroverseLanguage.Portuguese) + " " +
+                model.Subtitle.Get(MicroverseLanguage.Spanish) + " " +
+                model.Subtitle.Get(MicroverseLanguage.English) + " " +
+                model.Subtitle.Get(MicroverseLanguage.Portuguese)).ToLowerInvariant();
             return value.Contains(categoryFilter);
         }
 
@@ -254,30 +262,5 @@ namespace Microverse.UI
             }
         }
 
-        private string HeroText()
-        {
-            return TextFor(
-                "Explora el mundo microscopico\nen 3D y Realidad Aumentada",
-                "Explore the microscopic world\nin 3D and Augmented Reality",
-                "Explore o mundo microscopico\nem 3D e Realidade Aumentada");
-        }
-
-        private string PlaceholderText()
-        {
-            return TextFor("Buscar por nombre comun o cientifico", "Search by common or scientific name", "Buscar por nome comum ou cientifico");
-        }
-
-        private string TextFor(string spanish, string english, string portuguese)
-        {
-            switch (language)
-            {
-                case MicroverseLanguage.English:
-                    return english;
-                case MicroverseLanguage.Portuguese:
-                    return portuguese;
-                default:
-                    return spanish;
-            }
-        }
     }
 }

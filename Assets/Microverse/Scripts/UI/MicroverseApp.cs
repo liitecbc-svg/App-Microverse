@@ -10,6 +10,8 @@ namespace Microverse.UI
 {
     public class MicroverseApp : MonoBehaviour
     {
+        private const MicroverseLanguage SourceLanguage = MicroverseLanguage.English;
+
         private IModelCatalogService catalogService;
         private ITranslationService translationService;
         private UiTextCatalog uiTextCatalog;
@@ -32,6 +34,7 @@ namespace Microverse.UI
             selectedModel = models.Count > 0 ? models[0] : null;
             BuildCanvas();
             ShowHome();
+            TranslateLanguageIfNeeded(language);
         }
 
         private void OnDestroy()
@@ -193,7 +196,7 @@ namespace Microverse.UI
 
         private void TranslateLanguageIfNeeded(MicroverseLanguage targetLanguage)
         {
-            if (targetLanguage == MicroverseLanguage.Spanish ||
+            if (targetLanguage == SourceLanguage ||
                 translatedLanguages.Contains(targetLanguage) ||
                 pendingTranslationLanguages.Contains(targetLanguage))
             {
@@ -208,12 +211,12 @@ namespace Microverse.UI
             pendingTranslationLanguages.Add(targetLanguage);
             List<TranslationRequest> requests = new List<TranslationRequest>();
             List<Action<string>> applyTranslatedText = new List<Action<string>>();
-            string source = MicroverseLanguage.Spanish.ToLanguageCode();
+            string source = SourceLanguage.ToLanguageCode();
             string target = targetLanguage.ToLanguageCode();
 
             foreach (string key in uiTextCatalog.Keys)
             {
-                string uiText = uiTextCatalog.GetSpanish(key);
+                string uiText = uiTextCatalog.GetSource(key);
                 requests.Add(new TranslationRequest(uiText, source, target));
                 applyTranslatedText.Add(translated => uiTextCatalog.Set(targetLanguage, key, translated));
             }
@@ -257,7 +260,7 @@ namespace Microverse.UI
             List<TranslationRequest> requests,
             List<Action<string>> applyTranslatedText)
         {
-            string sourceText = text.Get(MicroverseLanguage.Spanish);
+            string sourceText = text.GetSource(SourceLanguage);
             requests.Add(new TranslationRequest(sourceText, source, target));
             applyTranslatedText.Add(translated => text.Set(targetLanguage, translated));
         }

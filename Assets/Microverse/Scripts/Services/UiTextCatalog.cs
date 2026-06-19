@@ -5,6 +5,50 @@ namespace Microverse.Services
 {
     public class UiTextCatalog
     {
+        private readonly Dictionary<string, string> sourceTexts = new Dictionary<string, string>
+        {
+            { "nav.home", "Home" },
+            { "nav.categories", "Categories" },
+            { "nav.scan", "Scan AR" },
+            { "nav.learn", "Learn" },
+            { "nav.profile", "Profile" },
+            { "common.search", "Search" },
+            { "common.menu", "Menu" },
+            { "common.details", "Details" },
+            { "home.hero", "Explore the microscopic world\nin 3D and Augmented Reality" },
+            { "home.feature.ar.title", "AR Viewer" },
+            { "home.feature.ar.subtitle", "View in your space" },
+            { "home.feature.library.title", "3D Library" },
+            { "home.feature.library.subtitle", "Explore in 3D" },
+            { "home.feature.quiz.title", "Quiz" },
+            { "home.feature.quiz.subtitle", "Test knowledge" },
+            { "home.feature.favorites.title", "Favorites" },
+            { "home.feature.favorites.subtitle", "Saved models" },
+            { "home.search.placeholder", "Search by common or scientific name" },
+            { "home.filter.all", "All" },
+            { "home.filter.cells", "Cells" },
+            { "home.filter.protozoans", "Protozoans" },
+            { "home.filter.viruses", "Viruses" },
+            { "home.filter.bacteria", "Bacteria" },
+            { "home.section.life", "Explore life in miniature" },
+            { "model.favorite", "Favorite" },
+            { "model.view_ar", "View in AR" },
+            { "detail.back.types", "Types of Cells" },
+            { "detail.categories", "Categories" },
+            { "detail.swipe", "Swipe to explore" },
+            { "detail.view_3d", "View in 3D" },
+            { "detail.view_ar", "View in AR" },
+            { "detail.about_prefix", "About " },
+            { "placeholder.categories.title", "Categories" },
+            { "placeholder.learn.title", "User Manual" },
+            { "placeholder.profile.title", "Credits" },
+            { "placeholder.ar.title", "AR Module" },
+            { "placeholder.categories.body", "The catalog will be organized by taxonomic classification when backend filters are connected." },
+            { "placeholder.learn.body", "Reserved space for the integrated manual and quick AR deployment guide." },
+            { "placeholder.profile.body", "Prepared section for ULS, LIITEC, Dra. Cassia Yano, and collaborator logos." },
+            { "placeholder.ar.body", "The AR view is ready to connect later with physical markers, touchable organelles, and dynamic model downloads." }
+        };
+
         private readonly Dictionary<string, string> spanishTexts = new Dictionary<string, string>
         {
             { "nav.home", "Inicio" },
@@ -52,26 +96,31 @@ namespace Microverse.Services
         private readonly Dictionary<MicroverseLanguage, Dictionary<string, string>> translatedTexts =
             new Dictionary<MicroverseLanguage, Dictionary<string, string>>();
 
+        public UiTextCatalog()
+        {
+            translatedTexts[MicroverseLanguage.Spanish] = new Dictionary<string, string>(spanishTexts);
+        }
+
         public IEnumerable<string> Keys
         {
-            get { return spanishTexts.Keys; }
+            get { return sourceTexts.Keys; }
         }
 
         public string Get(string key, MicroverseLanguage language)
         {
-            if (language != MicroverseLanguage.Spanish &&
+            if (language != MicroverseLanguage.English &&
                 translatedTexts.TryGetValue(language, out Dictionary<string, string> translations) &&
                 translations.TryGetValue(key, out string translated))
             {
                 return translated;
             }
 
-            return spanishTexts.TryGetValue(key, out string spanish) ? spanish : key;
+            return sourceTexts.TryGetValue(key, out string source) ? source : key;
         }
 
-        public string GetSpanish(string key)
+        public string GetSource(string key)
         {
-            return spanishTexts.TryGetValue(key, out string spanish) ? spanish : key;
+            return sourceTexts.TryGetValue(key, out string source) ? source : key;
         }
 
         public void Set(MicroverseLanguage language, string key, string value)

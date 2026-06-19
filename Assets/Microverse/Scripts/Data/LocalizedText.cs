@@ -14,17 +14,33 @@ namespace Microverse.Data
             Portuguese = portuguese;
         }
 
+        public static LocalizedText FromEnglish(string english)
+        {
+            return new LocalizedText(string.Empty, english, string.Empty);
+        }
+
         public string Get(MicroverseLanguage language)
         {
+            string preferred;
             switch (language)
             {
                 case MicroverseLanguage.English:
-                    return English;
+                    preferred = English;
+                    break;
                 case MicroverseLanguage.Portuguese:
-                    return Portuguese;
+                    preferred = Portuguese;
+                    break;
                 default:
-                    return Spanish;
+                    preferred = Spanish;
+                    break;
             }
+
+            return FirstAvailable(preferred, English, Spanish, Portuguese);
+        }
+
+        public string GetSource(MicroverseLanguage sourceLanguage)
+        {
+            return Get(sourceLanguage);
         }
 
         public void Set(MicroverseLanguage language, string value)
@@ -41,6 +57,19 @@ namespace Microverse.Data
                     Spanish = value;
                     break;
             }
+        }
+
+        private static string FirstAvailable(params string[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(values[i]))
+                {
+                    return values[i];
+                }
+            }
+
+            return string.Empty;
         }
     }
 }

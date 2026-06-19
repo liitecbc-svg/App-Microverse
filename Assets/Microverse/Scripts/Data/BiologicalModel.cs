@@ -16,6 +16,11 @@ namespace Microverse.Data
         public int VisualSeed;
         public bool IsElongated;
 
+        public string ModelFileUrl;
+        public string PreviewUrl;
+        [System.NonSerialized]
+        public Sprite LoadedPreviewSprite;
+
         public BiologicalModel(
             string id,
             LocalizedText name,
@@ -26,7 +31,9 @@ namespace Microverse.Data
             Color primaryColor,
             Color secondaryColor,
             int visualSeed,
-            bool isElongated = false)
+            bool isElongated = false,
+            string modelFileUrl = "",
+            string previewUrl = "")
         {
             Id = id;
             Name = name;
@@ -38,6 +45,9 @@ namespace Microverse.Data
             SecondaryColor = secondaryColor;
             VisualSeed = visualSeed;
             IsElongated = isElongated;
+            ModelFileUrl = modelFileUrl;
+            PreviewUrl = previewUrl;
+            LoadedPreviewSprite = null;
         }
     }
 }

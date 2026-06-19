@@ -27,14 +27,63 @@ namespace Microverse.UI
 
         private void Awake()
         {
-            catalogService = new LocalModelCatalogService();
             translationService = new AndroidMlKitTranslationService();
             uiTextCatalog = new UiTextCatalog();
-            models = catalogService.GetModels();
-            selectedModel = models.Count > 0 ? models[0] : null;
+            
             BuildCanvas();
-            ShowHome();
-            TranslateLanguageIfNeeded(language);
+            ShowLoadingScreen();
+
+            // Try loading from Supabase first
+            catalogService = new SupabaseModelCatalogService();
+            catalogService.LoadModels(
+                loadedModels => {
+                    models = loadedModels;
+                    selectedModel = models.Count > 0 ? models[0] : null;
+                    ClearScreen();
+                    ShowHome();
+                },
+                error => {
+                    Debug.LogWarning("Supabase loading failed, falling back to LocalModelCatalogService. Details: " + error);
+                    
+                    // Fallback to Local Catalog
+                    catalogService = new LocalModelCatalogService();
+                    catalogService.LoadModels(
+                        localModels => {
+                            models = localModels;
+                            selectedModel = models.Count > 0 ? models[0] : null;
+                            ClearScreen();
+                            ShowHome();
+                        },
+                        localError => {
+                            Debug.LogError("Critical: Local catalog also failed to load. " + localError);
+                        }
+                    );
+                }
+            );
+        }
+
+        private void ShowLoadingScreen()
+        {
+            ClearScreen();
+            
+            GameObject loadingGo = new GameObject("LoadingScreen", typeof(RectTransform));
+            loadingGo.transform.SetParent(screenRoot, false);
+            UiFactory.Stretch(loadingGo.GetComponent<RectTransform>());
+            activeScreen = loadingGo;
+
+            GameObject card = UiFactory.Panel("LoadingCard", loadingGo.transform, MicroverseTheme.Panel, 28);
+            RectTransform cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = new Vector2(0.12f, 0.38f);
+            cardRect.anchorMax = new Vector2(0.88f, 0.62f);
+            cardRect.offsetMin = Vector2.zero;
+            cardRect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI loadingText = UiFactory.Text("LoadingText", card.transform, "Cargando catálogo...\nLoading catalog...", 26, FontStyles.Bold, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            RectTransform textRect = loadingText.rectTransform;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
         }
 
         private void OnDestroy()
@@ -98,6 +147,12 @@ namespace Microverse.UI
                 return;
             }
 
+            if (tab == "categories")
+            {
+                ShowCategories();
+                return;
+            }
+
             if (tab == "scan" && selectedModel != null)
             {
                 ShowDetail(selectedModel);
@@ -111,10 +166,20 @@ namespace Microverse.UI
         {
             activeTab = "home";
             ClearScreen();
-            HomeScreenView home = new HomeScreenView(screenRoot, models, language, ShowDetail, CycleLanguage, GetUiText);
+            HomeScreenView home = new HomeScreenView(screenRoot, models, catalogService.GetCategories(), language, ShowDetail, CycleLanguage, GetUiText);
             activeScreen = home.Root;
             navigationBar.RefreshLabels();
             navigationBar.SetSelected("home");
+        }
+
+        private void ShowCategories()
+        {
+            activeTab = "categories";
+            ClearScreen();
+            CategoriesScreenView categoriesView = new CategoriesScreenView(screenRoot, models, catalogService.GetCategories(), language, ShowDetail, GetUiText);
+            activeScreen = categoriesView.Root;
+            navigationBar.RefreshLabels();
+            navigationBar.SetSelected("categories");
         }
 
         private void ShowDetail(BiologicalModel model)

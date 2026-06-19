@@ -47,7 +47,7 @@ namespace Microverse.UI
         private void BuildHeader()
         {
             TextMeshProUGUI logo = UiFactory.Text("Logo", Root.transform, "MicroVerse\nAR", 44, FontStyles.Bold, MicroverseTheme.Text);
-            logo.textWrappingMode = TextWrappingModes.NoWrap;
+            logo.enableWordWrapping = false;
             RectTransform logoRect = logo.rectTransform;
             logoRect.anchorMin = new Vector2(0f, 1f);
             logoRect.anchorMax = new Vector2(0f, 1f);
@@ -227,7 +227,32 @@ namespace Microverse.UI
             title.text = current.Name.Get(language);
             subtitle.text = current.Subtitle.Get(language);
             counter.text = (currentIndex + 1) + " / " + models.Count;
-            mainVisual.sprite = BiologyVisualFactory.CreateModelSprite(current);
+            if (!string.IsNullOrEmpty(current.PreviewUrl))
+            {
+                if (current.LoadedPreviewSprite != null)
+                {
+                    mainVisual.sprite = current.LoadedPreviewSprite;
+                }
+                else
+                {
+                    mainVisual.sprite = BiologyVisualFactory.CreateModelSprite(current);
+                    MonoBehaviour runner = Root.GetComponentInParent<MonoBehaviour>();
+                    if (runner != null)
+                    {
+                        runner.StartCoroutine(BiologyVisualFactory.DownloadPreviewTextureRoutine(current.PreviewUrl, sprite => {
+                            current.LoadedPreviewSprite = sprite;
+                            if (mainVisual != null && models[currentIndex] == current)
+                            {
+                                mainVisual.sprite = sprite;
+                            }
+                        }));
+                    }
+                }
+            }
+            else
+            {
+                mainVisual.sprite = BiologyVisualFactory.CreateModelSprite(current);
+            }
             aboutTitle.text = getText("detail.about_prefix") + current.Name.Get(language);
             aboutBody.text = current.Description.Get(language);
             sideLeft.text = previous.Name.Get(language) + "\n" + ((currentIndex - 1 + models.Count) % models.Count + 1) + " / " + models.Count;

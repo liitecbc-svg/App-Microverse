@@ -134,5 +134,24 @@ namespace Microverse.Services
         {
             return models;
         }
+
+        public void LoadModels(System.Action<IReadOnlyList<BiologicalModel>> onComplete, System.Action<string> onError)
+        {
+            onComplete?.Invoke(models);
+        }
+
+        public IReadOnlyList<string> GetCategories()
+        {
+            List<string> cats = new List<string>();
+            foreach (var m in models)
+            {
+                string catName = m.Category.Get(MicroverseLanguage.Spanish);
+                if (!cats.Contains(catName))
+                {
+                    cats.Add(catName);
+                }
+            }
+            return cats;
+        }
     }
 }

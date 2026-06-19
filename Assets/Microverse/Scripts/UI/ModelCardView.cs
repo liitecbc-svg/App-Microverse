@@ -31,13 +31,36 @@ namespace Microverse.UI
             visualRect.offsetMin = new Vector2(14f, 0f);
             visualRect.offsetMax = new Vector2(-14f, -12f);
 
-            TextMeshProUGUI favorite = UiFactory.Text("Favorite", Root.transform, getText("model.favorite"), 14, FontStyles.Bold, MicroverseTheme.MutedText, TextAlignmentOptions.Center);
+            if (!string.IsNullOrEmpty(model.PreviewUrl))
+            {
+                if (model.LoadedPreviewSprite != null)
+                {
+                    visual.sprite = model.LoadedPreviewSprite;
+                }
+                else
+                {
+                    MonoBehaviour runner = parent.GetComponentInParent<MonoBehaviour>();
+                    if (runner != null)
+                    {
+                        runner.StartCoroutine(BiologyVisualFactory.DownloadPreviewTextureRoutine(model.PreviewUrl, sprite =>
+                        {
+                            model.LoadedPreviewSprite = sprite;
+                            if (visual != null)
+                            {
+                                visual.sprite = sprite;
+                            }
+                        }));
+                    }
+                }
+            }
+
+            TextMeshProUGUI favorite = UiFactory.Text("Favorite", Root.transform, getText("model.favorite"), 18, FontStyles.Bold, MicroverseTheme.MutedText, TextAlignmentOptions.Center);
             RectTransform favRect = favorite.rectTransform;
             favRect.anchorMin = new Vector2(1f, 1f);
             favRect.anchorMax = new Vector2(1f, 1f);
             favRect.pivot = new Vector2(1f, 1f);
-            favRect.anchoredPosition = new Vector2(-16f, -16f);
-            favRect.sizeDelta = new Vector2(82f, 30f);
+            favRect.anchoredPosition = new Vector2(-18f, -16f);
+            favRect.sizeDelta = new Vector2(54f, 30f);
 
             TextMeshProUGUI title = UiFactory.Text("Title", Root.transform, model.Name.Get(language), 23, FontStyles.Bold, MicroverseTheme.Text);
             RectTransform titleRect = title.rectTransform;

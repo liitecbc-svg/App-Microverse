@@ -64,7 +64,7 @@ namespace Microverse.Services
             { "home.feature.ar.subtitle", "Ver en tu espacio" },
             { "home.feature.library.title", "Biblioteca 3D" },
             { "home.feature.library.subtitle", "Explorar en 3D" },
-            { "home.feature.quiz.title", "Prueba" },
+            { "home.feature.quiz.title", "Quiz" },
             { "home.feature.quiz.subtitle", "Prueba conocimiento" },
             { "home.feature.favorites.title", "Favoritos" },
             { "home.feature.favorites.subtitle", "Modelos guardados" },

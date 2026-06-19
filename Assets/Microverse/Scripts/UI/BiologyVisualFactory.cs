@@ -176,5 +176,26 @@ namespace Microverse.UI
             blended.a = Mathf.Clamp01(previous.a + color.a);
             texture.SetPixel(x, y, blended);
         }
+
+        public static System.Collections.IEnumerator DownloadPreviewTextureRoutine(string url, System.Action<Sprite> callback)
+        {
+            using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(url))
+            {
+                yield return request.SendWebRequest();
+                if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                {
+                    Texture2D texture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
+                    if (texture != null)
+                    {
+                        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                        callback?.Invoke(sprite);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("[Supabase] Failed to download preview image (" + url + "): " + request.error);
+                }
+            }
+        }
     }
 }

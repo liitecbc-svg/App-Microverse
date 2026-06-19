@@ -27,7 +27,7 @@ namespace Microverse.UI
             text.fontStyle = style;
             text.color = color;
             text.alignment = alignment;
-            text.textWrappingMode = TextWrappingModes.Normal;
+            text.enableWordWrapping = true;
             text.overflowMode = TextOverflowModes.Ellipsis;
             return text;
         }

@@ -13,6 +13,7 @@ namespace Microverse.UI
         public GameObject Root { get; private set; }
 
         private readonly IReadOnlyList<BiologicalModel> models;
+        private readonly IReadOnlyList<string> categories;
         private readonly MicroverseLanguage language;
         private readonly Action<BiologicalModel> onOpenModel;
         private readonly Action onCycleLanguage;
@@ -21,9 +22,10 @@ namespace Microverse.UI
         private string searchTerm = string.Empty;
         private string categoryFilter = string.Empty;
 
-        public HomeScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, MicroverseLanguage language, Action<BiologicalModel> onOpenModel, Action onCycleLanguage, Func<string, string> getText)
+        public HomeScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, IReadOnlyList<string> categories, MicroverseLanguage language, Action<BiologicalModel> onOpenModel, Action onCycleLanguage, Func<string, string> getText)
         {
             this.models = models;
+            this.categories = categories;
             this.language = language;
             this.onOpenModel = onOpenModel;
             this.onCycleLanguage = onCycleLanguage;
@@ -43,7 +45,7 @@ namespace Microverse.UI
         private void BuildHeader()
         {
             TextMeshProUGUI logo = UiFactory.Text("Logo", Root.transform, "MicroVerse\nAR", 46, FontStyles.Bold, MicroverseTheme.Text);
-            logo.textWrappingMode = TextWrappingModes.NoWrap;
+            logo.enableWordWrapping = false;
             RectTransform logoRect = logo.rectTransform;
             logoRect.anchorMin = new Vector2(0f, 1f);
             logoRect.anchorMax = new Vector2(0f, 1f);
@@ -128,10 +130,13 @@ namespace Microverse.UI
             layout.childForceExpandHeight = true;
 
             AddFilter(filters.transform, getText("home.filter.all"), string.Empty);
-            AddFilter(filters.transform, getText("home.filter.cells"), "cell");
-            AddFilter(filters.transform, getText("home.filter.protozoans"), "proto");
-            AddFilter(filters.transform, getText("home.filter.viruses"), "virus");
-            AddFilter(filters.transform, getText("home.filter.bacteria"), "bacter");
+            if (categories != null)
+            {
+                foreach (string cat in categories)
+                {
+                    AddFilter(filters.transform, cat, cat.ToLowerInvariant());
+                }
+            }
         }
 
         private Transform BuildCatalogGrid()

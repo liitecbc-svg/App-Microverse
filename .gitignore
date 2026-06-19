@@ -29,6 +29,9 @@ Desktop.ini
 # Unity crash and local build artifacts
 sysinfo.txt
 *.stackdump
+/.utmp/
+Assets/Plugins/Android/*.backup
+Assets/Plugins/Android/*.backup.meta
 
 # Asset Store tools
 /Assets/AssetStoreTools*

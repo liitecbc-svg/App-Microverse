@@ -9,6 +9,8 @@ namespace Microverse.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void StartMicroverse()
         {
+            UnityMainThreadDispatcher.Ensure();
+
             if (Object.FindObjectOfType<MicroverseApp>() != null)
             {
                 return;

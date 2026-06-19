@@ -26,5 +26,21 @@ namespace Microverse.Data
                     return Spanish;
             }
         }
+
+        public void Set(MicroverseLanguage language, string value)
+        {
+            switch (language)
+            {
+                case MicroverseLanguage.English:
+                    English = value;
+                    break;
+                case MicroverseLanguage.Portuguese:
+                    Portuguese = value;
+                    break;
+                default:
+                    Spanish = value;
+                    break;
+            }
+        }
     }
 }

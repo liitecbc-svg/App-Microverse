@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using Microverse.Data;
 using Microverse.Services;
 using TMPro;
@@ -10,7 +11,9 @@ namespace Microverse.UI
     public class MicroverseApp : MonoBehaviour
     {
         private IModelCatalogService catalogService;
+        private ITranslationService translationService;
         private IReadOnlyList<BiologicalModel> models;
+        private readonly HashSet<MicroverseLanguage> translatedLanguages = new HashSet<MicroverseLanguage>();
         private MicroverseLanguage language = MicroverseLanguage.Spanish;
         private RectTransform screenRoot;
         private BottomNavigationBar navigationBar;
@@ -21,10 +24,20 @@ namespace Microverse.UI
         private void Awake()
         {
             catalogService = new LocalModelCatalogService();
+            translationService = new AndroidMlKitTranslationService();
             models = catalogService.GetModels();
             selectedModel = models.Count > 0 ? models[0] : null;
             BuildCanvas();
             ShowHome();
+        }
+
+        private void OnDestroy()
+        {
+            IDisposable disposable = translationService as IDisposable;
+            if (disposable != null)
+            {
+                disposable.Dispose();
+            }
         }
 
         private void BuildCanvas()
@@ -155,6 +168,83 @@ namespace Microverse.UI
                     break;
             }
 
+            if (activeTab == "scan" && selectedModel != null)
+            {
+                ShowDetail(selectedModel);
+            }
+            else if (activeTab == "home")
+            {
+                ShowHome();
+            }
+            else
+            {
+                ShowPlaceholder(activeTab);
+            }
+
+            TranslateCatalogIfNeeded(language);
+        }
+
+        private void TranslateCatalogIfNeeded(MicroverseLanguage targetLanguage)
+        {
+            if (targetLanguage == MicroverseLanguage.Spanish || translatedLanguages.Contains(targetLanguage))
+            {
+                return;
+            }
+
+            if (translationService == null || !translationService.IsAutomaticTranslationAvailable)
+            {
+                return;
+            }
+
+            List<TranslationRequest> requests = new List<TranslationRequest>();
+            List<Action<string>> applyTranslatedText = new List<Action<string>>();
+            string source = MicroverseLanguage.Spanish.ToLanguageCode();
+            string target = targetLanguage.ToLanguageCode();
+
+            foreach (BiologicalModel model in models)
+            {
+                AddTranslationRequest(model.Name, targetLanguage, source, target, requests, applyTranslatedText);
+                AddTranslationRequest(model.Subtitle, targetLanguage, source, target, requests, applyTranslatedText);
+                AddTranslationRequest(model.Category, targetLanguage, source, target, requests, applyTranslatedText);
+                AddTranslationRequest(model.Description, targetLanguage, source, target, requests, applyTranslatedText);
+            }
+
+            translationService.TranslateBatch(
+                requests,
+                translations =>
+                {
+                    for (int i = 0; i < translations.Count; i++)
+                    {
+                        applyTranslatedText[i](translations[i]);
+                    }
+
+                    translatedLanguages.Add(targetLanguage);
+                    if (language == targetLanguage)
+                    {
+                        RefreshCurrentScreen();
+                    }
+                },
+                error =>
+                {
+                    Debug.LogWarning("Automatic translation unavailable. Keeping local text. " + error);
+                });
+        }
+
+        private void AddTranslationRequest(
+            LocalizedText text,
+            MicroverseLanguage targetLanguage,
+            string source,
+            string target,
+            List<TranslationRequest> requests,
+            List<Action<string>> applyTranslatedText)
+        {
+            string sourceText = text.Get(MicroverseLanguage.Spanish);
+            requests.Add(new TranslationRequest(sourceText, source, target));
+            applyTranslatedText.Add(translated => text.Set(targetLanguage, translated));
+        }
+
+        private void RefreshCurrentScreen()
+        {
             if (activeTab == "scan" && selectedModel != null)
             {
                 ShowDetail(selectedModel);

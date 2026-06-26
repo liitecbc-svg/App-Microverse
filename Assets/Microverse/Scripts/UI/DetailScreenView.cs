@@ -14,6 +14,7 @@ namespace Microverse.UI
         private readonly IReadOnlyList<BiologicalModel> models;
         private readonly MicroverseLanguage language;
         private readonly Action onBack;
+        private readonly Action<BiologicalModel> onViewAR;
         private readonly Func<string, string> getText;
         private int currentIndex;
         private Image mainVisual;
@@ -25,11 +26,12 @@ namespace Microverse.UI
         private TextMeshProUGUI sideLeft;
         private TextMeshProUGUI sideRight;
 
-        public DetailScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, BiologicalModel selected, MicroverseLanguage language, Action onBack, Func<string, string> getText)
+        public DetailScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, BiologicalModel selected, MicroverseLanguage language, Action onBack, Action<BiologicalModel> onViewAR, Func<string, string> getText)
         {
             this.models = models;
             this.language = language;
             this.onBack = onBack;
+            this.onViewAR = onViewAR;
             this.getText = getText;
             currentIndex = Mathf.Max(0, IndexOf(selected));
 
@@ -169,7 +171,7 @@ namespace Microverse.UI
 
         private void BuildActions()
         {
-            Button view3d = UiFactory.Button("View3D", Root.transform, getText("detail.view_3d"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 26);
+            Button view3d = UiFactory.Button("View3D", Root.transform, getText("detail.view_3d"), () => onViewAR?.Invoke(models[currentIndex]), MicroverseTheme.PanelLight, MicroverseTheme.Text, 26);
             RectTransform view3dRect = view3d.GetComponent<RectTransform>();
             view3dRect.anchorMin = new Vector2(0f, 0f);
             view3dRect.anchorMax = new Vector2(0f, 0f);
@@ -177,7 +179,7 @@ namespace Microverse.UI
             view3dRect.anchoredPosition = new Vector2(128f, 386f);
             view3dRect.sizeDelta = new Vector2(280f, 86f);
 
-            Button viewAr = UiFactory.Button("ViewAR", Root.transform, getText("detail.view_ar"), () => { }, new Color(0.0f, 0.42f, 0.68f, 0.96f), MicroverseTheme.Text, 26);
+            Button viewAr = UiFactory.Button("ViewAR", Root.transform, getText("detail.view_ar"), () => onViewAR?.Invoke(models[currentIndex]), new Color(0.0f, 0.42f, 0.68f, 0.96f), MicroverseTheme.Text, 26);
             RectTransform viewArRect = viewAr.GetComponent<RectTransform>();
             viewArRect.anchorMin = new Vector2(1f, 0f);
             viewArRect.anchorMax = new Vector2(1f, 0f);

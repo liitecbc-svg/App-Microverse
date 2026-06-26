@@ -9,6 +9,7 @@ namespace Microverse.UI
     public class BottomNavigationBar
     {
         private readonly GameObject root;
+        public GameObject Root => root;
         private readonly Action<string> onSelect;
         private readonly Func<string, string> getText;
         private readonly Dictionary<string, TextMeshProUGUI> labels = new Dictionary<string, TextMeshProUGUI>();

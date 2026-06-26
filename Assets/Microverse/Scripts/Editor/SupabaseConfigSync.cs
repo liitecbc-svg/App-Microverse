@@ -47,8 +47,8 @@ namespace Microverse.Editor
                         val = val.Substring(1, val.Length - 2);
                     }
 
-                    if (keyName == "SUPABASE_URL") url = val;
-                    else if (keyName == "SUPABASE_KEY") key = val;
+                    if (keyName == "SUPABASE_URL" || keyName == "VITE_SUPABASE_URL") url = val;
+                    else if (keyName == "SUPABASE_KEY" || keyName == "VITE_SUPABASE_ANON_KEY" || keyName == "VITE_SUPABASE_KEY") key = val;
                 }
 
                 if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))

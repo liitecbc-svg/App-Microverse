@@ -996,7 +996,7 @@ namespace Microverse.UI
                 if (parameters[i].HasDefaultValue)
                 {
                     args[i] = parameters[i].DefaultValue;
-                    if (args[i] == DBNull.Value || args[i] == Type.Missing)
+                    if (args[i] == null || args[i] == DBNull.Value || args[i] == Type.Missing)
                     {
                         args[i] = parameters[i].ParameterType.IsValueType ? Activator.CreateInstance(parameters[i].ParameterType) : null;
                     }

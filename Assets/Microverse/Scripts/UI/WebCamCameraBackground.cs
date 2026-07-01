@@ -298,14 +298,61 @@ namespace Microverse.UI
 
             // Handle camera rotation on mobile device
             int rotationAngle = webcamTexture.videoRotationAngle;
-
-            // Fill the AR background while using the rotated camera aspect, avoiding false zoom from a wrong ratio.
             bool isSideways = Mathf.Abs(rotationAngle) == 90 || Mathf.Abs(rotationAngle) == 270;
-            float ratio = isSideways
-                ? (float)webcamTexture.height / (float)webcamTexture.width
-                : (float)webcamTexture.width / (float)webcamTexture.height;
-            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fitter.aspectRatio = ratio;
+
+            // Get parent rect size to scale manually since AspectRatioFitter does not handle RectTransform rotation
+            RectTransform parentRect = transform.parent as RectTransform;
+            if (parentRect != null)
+            {
+                if (fitter != null)
+                {
+                    fitter.aspectMode = AspectRatioFitter.AspectMode.None;
+                }
+
+                Vector2 parentSize = parentRect.rect.size;
+                float wParent = parentSize.x;
+                float hParent = parentSize.y;
+
+                if (wParent > 0 && hParent > 0)
+                {
+                    float wTexture = webcamTexture.width;
+                    float hTexture = webcamTexture.height;
+
+                    float ratio = isSideways
+                        ? hTexture / wTexture
+                        : wTexture / hTexture;
+
+                    float wVisual, hVisual;
+                    float parentRatio = wParent / hParent;
+
+                    if (parentRatio > ratio)
+                    {
+                        // Match width
+                        wVisual = wParent;
+                        hVisual = wVisual / ratio;
+                    }
+                    else
+                    {
+                        // Match height
+                        hVisual = hParent;
+                        wVisual = hVisual * ratio;
+                    }
+
+                    // Set anchors and pivot to center so rotation scales from the center point
+                    rawImage.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                    rawImage.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                    rawImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+
+                    if (isSideways)
+                    {
+                        rawImage.rectTransform.sizeDelta = new Vector2(hVisual, wVisual);
+                    }
+                    else
+                    {
+                        rawImage.rectTransform.sizeDelta = new Vector2(wVisual, hVisual);
+                    }
+                }
+            }
 
             rawImage.rectTransform.localEulerAngles = new Vector3(0f, 0f, -rotationAngle);
 

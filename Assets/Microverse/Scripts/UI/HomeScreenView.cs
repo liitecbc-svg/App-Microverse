@@ -34,7 +34,6 @@ namespace Microverse.UI
         private readonly Dictionary<string, Image> featureImages = new Dictionary<string, Image>();
         private readonly Dictionary<string, TextMeshProUGUI> featureLabels = new Dictionary<string, TextMeshProUGUI>();
         private readonly HashSet<string> inlineFilterValues = new HashSet<string>();
-        private TextMeshProUGUI catalogTitle;
         private TextMeshProUGUI emptyStateText;
         private Image moreFilterImage;
         private TextMeshProUGUI moreFilterLabel;
@@ -58,7 +57,6 @@ namespace Microverse.UI
 
             BuildHeader();
             BuildFeatureRow();
-            BuildCatalogHeading();
             BuildSearchAndFilters();
             gridContent = BuildCatalogGrid();
             RefreshGrid();
@@ -66,22 +64,17 @@ namespace Microverse.UI
 
         private void BuildHeader()
         {
-            TextMeshProUGUI logo = UiFactory.Text("Logo", Root.transform, "MicroVerse\nAR", 46, FontStyles.Bold, MicroverseTheme.Text);
-            logo.enableWordWrapping = false;
+            Texture2D logoTexture = Resources.Load<Texture2D>("AppLogo/microverse-logo-temp");
+            Sprite logoSprite = logoTexture == null
+                ? null
+                : Sprite.Create(logoTexture, new Rect(0f, 0f, logoTexture.width, logoTexture.height), new Vector2(0.5f, 0.5f));
+            Image logo = UiFactory.Image("Logo", Root.transform, logoSprite, Color.white);
             RectTransform logoRect = logo.rectTransform;
             logoRect.anchorMin = new Vector2(0f, 1f);
             logoRect.anchorMax = new Vector2(0f, 1f);
             logoRect.pivot = new Vector2(0f, 1f);
-            logoRect.anchoredPosition = new Vector2(54f, -34f);
-            logoRect.sizeDelta = new Vector2(360f, 110f);
-
-            Button search = UiFactory.Button("SearchButton", Root.transform, getText("common.search"), () => { }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
-            RectTransform searchRect = search.GetComponent<RectTransform>();
-            searchRect.anchorMin = new Vector2(1f, 1f);
-            searchRect.anchorMax = new Vector2(1f, 1f);
-            searchRect.pivot = new Vector2(1f, 1f);
-            searchRect.anchoredPosition = new Vector2(-154f, -44f);
-            searchRect.sizeDelta = new Vector2(104f, 70f);
+            logoRect.anchoredPosition = new Vector2(54f, -24f);
+            logoRect.sizeDelta = new Vector2(126f, 126f);
 
             Button settings = UiFactory.Button("LanguageButton", Root.transform, LanguageLabel(), () => onCycleLanguage(), MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
             RectTransform settingsRect = settings.GetComponent<RectTransform>();
@@ -95,8 +88,8 @@ namespace Microverse.UI
             RectTransform heroRect = hero.rectTransform;
             heroRect.anchorMin = new Vector2(0f, 1f);
             heroRect.anchorMax = new Vector2(1f, 1f);
-            heroRect.offsetMin = new Vector2(54f, -220f);
-            heroRect.offsetMax = new Vector2(-54f, -130f);
+            heroRect.offsetMin = new Vector2(54f, -275f);
+            heroRect.offsetMax = new Vector2(-54f, -175f);
         }
 
         private void BuildFeatureRow()
@@ -106,8 +99,8 @@ namespace Microverse.UI
             RectTransform rect = row.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(1f, 1f);
-            rect.offsetMin = new Vector2(54f, -320f);
-            rect.offsetMax = new Vector2(-54f, -242f);
+            rect.offsetMin = new Vector2(54f, -375f);
+            rect.offsetMax = new Vector2(-54f, -297f);
 
             HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 18;
@@ -116,9 +109,9 @@ namespace Microverse.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            AddFeature(row.transform, "ar", getText("home.feature.ar.title"), getText("home.feature.ar.subtitle"), true, () => SetCatalogMode(CatalogMode.Ar));
-            AddFeature(row.transform, "library", getText("home.feature.library.title"), getText("home.feature.library.subtitle"), false, () => SetCatalogMode(CatalogMode.Library));
-            AddFeature(row.transform, "favorites", getText("home.feature.favorites.title"), getText("home.feature.favorites.subtitle"), false, () => SetCatalogMode(CatalogMode.Favorites));
+            AddFeature(row.transform, "ar", getText("home.feature.ar.title"), true, () => SetCatalogMode(CatalogMode.Ar));
+            AddFeature(row.transform, "library", getText("home.feature.library.title"), false, () => SetCatalogMode(CatalogMode.Library));
+            AddFeature(row.transform, "favorites", getText("home.feature.favorites.title"), false, () => SetCatalogMode(CatalogMode.Favorites));
             RefreshFeatureSelection();
         }
 
@@ -128,8 +121,8 @@ namespace Microverse.UI
             RectTransform inputRect = input.GetComponent<RectTransform>();
             inputRect.anchorMin = new Vector2(0f, 1f);
             inputRect.anchorMax = new Vector2(1f, 1f);
-            inputRect.offsetMin = new Vector2(54f, -446f);
-            inputRect.offsetMax = new Vector2(-54f, -390f);
+            inputRect.offsetMin = new Vector2(54f, -466f);
+            inputRect.offsetMax = new Vector2(-54f, -410f);
             input.onValueChanged.AddListener(value =>
             {
                 searchTerm = value.ToLowerInvariant();
@@ -141,8 +134,8 @@ namespace Microverse.UI
             RectTransform filtersRect = filters.GetComponent<RectTransform>();
             filtersRect.anchorMin = new Vector2(0f, 1f);
             filtersRect.anchorMax = new Vector2(1f, 1f);
-            filtersRect.offsetMin = new Vector2(54f, -518f);
-            filtersRect.offsetMax = new Vector2(-54f, -460f);
+            filtersRect.offsetMin = new Vector2(54f, -538f);
+            filtersRect.offsetMax = new Vector2(-54f, -480f);
 
             HorizontalLayoutGroup layout = filters.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 12;
@@ -169,16 +162,6 @@ namespace Microverse.UI
             RefreshFilterSelection();
         }
 
-        private void BuildCatalogHeading()
-        {
-            catalogTitle = UiFactory.Text("SectionTitle", Root.transform, getText("home.section.life"), 28, FontStyles.Bold, MicroverseTheme.Text);
-            RectTransform titleRect = catalogTitle.rectTransform;
-            titleRect.anchorMin = new Vector2(0f, 1f);
-            titleRect.anchorMax = new Vector2(1f, 1f);
-            titleRect.offsetMin = new Vector2(54f, -376f);
-            titleRect.offsetMax = new Vector2(-54f, -326f);
-        }
-
         private Transform BuildCatalogGrid()
         {
             GameObject viewport = UiFactory.Panel("CatalogViewport", Root.transform, new Color(0f, 0f, 0f, 0f), 0);
@@ -186,7 +169,7 @@ namespace Microverse.UI
             viewportRect.anchorMin = new Vector2(0f, 0f);
             viewportRect.anchorMax = new Vector2(1f, 1f);
             viewportRect.offsetMin = new Vector2(54f, 172f);
-            viewportRect.offsetMax = new Vector2(-54f, -552f);
+            viewportRect.offsetMax = new Vector2(-54f, -572f);
 
             ScrollRect scroll = viewport.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -225,7 +208,7 @@ namespace Microverse.UI
             emptyRect.anchorMin = new Vector2(0f, 0f);
             emptyRect.anchorMax = new Vector2(1f, 1f);
             emptyRect.offsetMin = new Vector2(70f, 172f);
-            emptyRect.offsetMax = new Vector2(-70f, -552f);
+            emptyRect.offsetMax = new Vector2(-70f, -572f);
             emptyStateText.gameObject.SetActive(false);
             return content.transform;
         }
@@ -236,8 +219,6 @@ namespace Microverse.UI
             {
                 UnityEngine.Object.Destroy(gridContent.GetChild(i).gameObject);
             }
-
-            catalogTitle.text = CatalogTitle();
 
             IEnumerable<BiologicalModel> filtered = models.Where(MatchesCatalogMode).Where(MatchesSearch).Where(MatchesCategory);
             List<BiologicalModel> visibleModels = filtered.ToList();
@@ -313,7 +294,7 @@ namespace Microverse.UI
             return value.Contains(categoryFilter);
         }
 
-        private void AddFeature(Transform parent, string key, string title, string subtitle, bool active, Action onClick)
+        private void AddFeature(Transform parent, string key, string title, bool active, Action onClick)
         {
             GameObject item = UiFactory.Panel("Feature-" + title, parent, active ? new Color(0.02f, 0.14f, 0.30f, 0.95f) : MicroverseTheme.Panel, 18);
             Button button = item.AddComponent<Button>();
@@ -322,13 +303,19 @@ namespace Microverse.UI
             button.onClick.AddListener(() => onClick?.Invoke());
 
             VerticalLayoutGroup layout = item.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(24, 18, 12, 8);
+            layout.padding = new RectOffset(24, 18, 0, 0);
             layout.spacing = 0;
             layout.childControlHeight = true;
             layout.childControlWidth = true;
+            layout.childForceExpandHeight = true;
+            layout.childAlignment = TextAnchor.MiddleCenter;
 
-            TextMeshProUGUI titleText = UiFactory.Text("Title", item.transform, title, 21, FontStyles.Bold, MicroverseTheme.Text);
-            UiFactory.Text("Subtitle", item.transform, subtitle, 15, FontStyles.Normal, MicroverseTheme.MutedText);
+            TextMeshProUGUI titleText = UiFactory.Text("Title", item.transform, title, 25, FontStyles.Bold, MicroverseTheme.Text);
+            titleText.enableAutoSizing = true;
+            titleText.fontSizeMax = 27;
+            titleText.fontSizeMin = 16;
+            titleText.enableWordWrapping = false;
+            titleText.alignment = TextAlignmentOptions.Center;
             featureImages[key] = item.GetComponent<Image>();
             featureLabels[key] = titleText;
         }
@@ -368,19 +355,6 @@ namespace Microverse.UI
                     return "favorites";
                 default:
                     return "ar";
-            }
-        }
-
-        private string CatalogTitle()
-        {
-            switch (catalogMode)
-            {
-                case CatalogMode.Library:
-                    return getText("home.feature.library.title");
-                case CatalogMode.Favorites:
-                    return getText("home.feature.favorites.title");
-                default:
-                    return getText("home.feature.ar.title");
             }
         }
 
@@ -436,7 +410,9 @@ namespace Microverse.UI
             }, new Color(0.03f, 0.08f, 0.17f, 0.88f), MicroverseTheme.Text, 16);
 
             filterImages[value] = button.GetComponent<Image>();
-            filterLabels[value] = button.GetComponentInChildren<TextMeshProUGUI>();
+            TextMeshProUGUI labelText = button.GetComponentInChildren<TextMeshProUGUI>();
+            UiFactory.ConfigureButtonLabel(labelText, 16, 10);
+            filterLabels[value] = labelText;
             inlineFilterValues.Add(value);
         }
 
@@ -445,6 +421,7 @@ namespace Microverse.UI
             Button button = UiFactory.Button("Filter-More", parent, MoreLabel(), ShowCategoryPicker, new Color(0.03f, 0.08f, 0.17f, 0.88f), MicroverseTheme.Text, 16);
             moreFilterImage = button.GetComponent<Image>();
             moreFilterLabel = button.GetComponentInChildren<TextMeshProUGUI>();
+            UiFactory.ConfigureButtonLabel(moreFilterLabel, 16, 10);
         }
 
         private void RefreshFilterSelection()
@@ -467,6 +444,7 @@ namespace Microverse.UI
                 moreFilterImage.color = active ? new Color(0.0f, 0.24f, 0.48f, 0.95f) : new Color(0.03f, 0.08f, 0.17f, 0.88f);
                 moreFilterLabel.color = active ? MicroverseTheme.Cyan : MicroverseTheme.Text;
                 moreFilterLabel.text = active ? SelectedCategoryLabel() : MoreLabel();
+                UiFactory.ConfigureButtonLabel(moreFilterLabel, 16, 10);
             }
         }
 

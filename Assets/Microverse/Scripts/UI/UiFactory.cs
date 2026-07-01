@@ -42,8 +42,27 @@ namespace Microverse.UI
             button.onClick.AddListener(action);
 
             TextMeshProUGUI text = Text("Label", go.transform, label, fontSize, FontStyles.Bold, textColor, TextAlignmentOptions.Center);
-            Stretch(text.rectTransform, 14, 8);
+            ConfigureButtonLabel(text, fontSize);
+            Stretch(text.rectTransform, 1, 1);
             return button;
+        }
+
+        public static void ConfigureButtonLabel(TextMeshProUGUI text, int maxFontSize, int minFontSize = 11, bool allowWrap = false)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            int responsiveMaxFontSize = Mathf.CeilToInt(maxFontSize * 1.4f);
+            text.enableAutoSizing = true;
+            text.fontSize = responsiveMaxFontSize;
+            text.fontSizeMax = responsiveMaxFontSize;
+            text.fontSizeMin = Mathf.Clamp(minFontSize, 8, responsiveMaxFontSize);
+            text.enableWordWrapping = allowWrap;
+            text.overflowMode = TextOverflowModes.Ellipsis;
+            text.alignment = TextAlignmentOptions.Center;
+            text.margin = Vector4.zero;
         }
 
         public static UnityEngine.UI.Image Image(string name, Transform parent, Sprite sprite, Color color)

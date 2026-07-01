@@ -14,9 +14,9 @@ namespace Microverse.Services
                 new LocalizedText("Estructura genetica", "Genetic Structure", "Estrutura genetica"),
                 new LocalizedText("Tipos de celulas", "Types of Cells", "Tipos de celulas"),
                 new LocalizedText(
-                    "Modelo base incluido en la app para pruebas del visor RA local.",
-                    "Base model included in the app for local AR viewer tests.",
-                    "Modelo base incluido no app para testes do visor RA local."),
+                    "Los cromosomas son estructuras de ADN y proteinas que contienen la informacion genetica y ayudan a distribuirla durante la division celular.",
+                    "Chromosomes are DNA and protein structures that contain genetic information and help distribute it during cell division.",
+                    "Os cromossomos sao estruturas de DNA e proteinas que contem informacao genetica e ajudam a distribui-la durante a divisao celular."),
                 "Chromosoma",
                 new Color(0.88f, 0.22f, 0.44f),
                 new Color(0.36f, 0.65f, 1.0f),

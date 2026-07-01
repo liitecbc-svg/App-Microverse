@@ -57,6 +57,7 @@ namespace Microverse.UI
             foreach (KeyValuePair<string, TextMeshProUGUI> entry in labels)
             {
                 entry.Value.text = getText(entry.Key);
+                UiFactory.ConfigureButtonLabel(entry.Value, 20, 12);
             }
         }
 
@@ -69,7 +70,9 @@ namespace Microverse.UI
                 onSelect(id);
             }, new Color(0f, 0f, 0f, 0f), MicroverseTheme.Text, id == "scan" ? 24 : 20);
             button.name = id;
-            labels[textKey] = button.GetComponentInChildren<TextMeshProUGUI>();
+            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>();
+            UiFactory.ConfigureButtonLabel(label, id == "scan" ? 24 : 20, 12);
+            labels[textKey] = label;
             RectTransform rect = button.GetComponent<RectTransform>();
             rect.sizeDelta = id == "scan" ? new Vector2(190f, 110f) : new Vector2(160f, 96f);
         }

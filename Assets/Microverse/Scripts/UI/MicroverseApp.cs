@@ -484,14 +484,14 @@ namespace Microverse.UI
             frameRect.offsetMin = new Vector2(24f, 26f);
             frameRect.offsetMax = new Vector2(-24f, -26f);
 
-            string backLabel = "<  " + GetUiText("detail.back.types");
+            string backLabel = "<";
             Button backButton = UiFactory.Button("ARBackButton", safeFrame.transform, backLabel, ExitARMode, new Color(0.05f, 0.12f, 0.28f, 0.85f), MicroverseTheme.Text, 25);
             RectTransform backRect = backButton.GetComponent<RectTransform>();
             backRect.anchorMin = new Vector2(0f, 1f);
             backRect.anchorMax = new Vector2(0f, 1f);
             backRect.pivot = new Vector2(0f, 1f);
             backRect.anchoredPosition = new Vector2(38f, -38f);
-            backRect.sizeDelta = new Vector2(340f, 75f);
+            backRect.sizeDelta = new Vector2(75f, 75f);
 
             string instruction = language == MicroverseLanguage.Spanish ? 
                 "Usa 1 dedo para rotar la célula\nUsa 2 dedos para cambiar el tamaño" : 
@@ -499,21 +499,57 @@ namespace Microverse.UI
                 "Use 1 dedo para rotar a célula\nUse 2 dedos para redimensionar" :
                 "Use 1 finger to rotate the cell\nUse 2 fingers to resize");
             
-            TextMeshProUGUI instructionText = UiFactory.Text("ARInstructions", safeFrame.transform, instruction, 24, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            instruction = language == MicroverseLanguage.Spanish ?
+                "Usa 1 dedo para rotar el modelo\nUsa 2 dedos para cambiar el tamano" :
+                (language == MicroverseLanguage.Portuguese ?
+                "Use 1 dedo para rotar o modelo\nUse 2 dedos para redimensionar" :
+                "Use 1 finger to rotate the model\nUse 2 fingers to resize");
+
+            GameObject helpPanel = UiFactory.Panel("ARHelpPanel", safeFrame.transform, new Color(0.02f, 0.06f, 0.14f, 0.92f), 20);
+            RectTransform helpPanelRect = helpPanel.GetComponent<RectTransform>();
+            helpPanelRect.anchorMin = new Vector2(1f, 1f);
+            helpPanelRect.anchorMax = new Vector2(1f, 1f);
+            helpPanelRect.pivot = new Vector2(1f, 1f);
+            helpPanelRect.anchoredPosition = new Vector2(-38f, -126f);
+            helpPanelRect.sizeDelta = new Vector2(500f, 130f);
+
+            TextMeshProUGUI instructionText = UiFactory.Text("ARInstructions", helpPanel.transform, instruction, 22, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
             RectTransform instructionRect = instructionText.rectTransform;
-            instructionRect.anchorMin = new Vector2(0f, 0f);
-            instructionRect.anchorMax = new Vector2(1f, 0f);
-            instructionRect.pivot = new Vector2(0.5f, 0f);
-            instructionRect.anchoredPosition = new Vector2(0f, 50f);
-            instructionRect.sizeDelta = new Vector2(900f, 100f);
+            instructionText.enableAutoSizing = true;
+            instructionText.fontSizeMax = 22;
+            instructionText.fontSizeMin = 14;
+            UiFactory.Stretch(instructionRect, 24f, 16f);
+            helpPanel.SetActive(false);
+
+            Button helpButton = UiFactory.Button("ARHelpButton", safeFrame.transform, "!", () => helpPanel.SetActive(!helpPanel.activeSelf), new Color(0.05f, 0.12f, 0.28f, 0.85f), MicroverseTheme.Cyan, 34);
+            RectTransform helpRect = helpButton.GetComponent<RectTransform>();
+            helpRect.anchorMin = new Vector2(1f, 1f);
+            helpRect.anchorMax = new Vector2(1f, 1f);
+            helpRect.pivot = new Vector2(1f, 1f);
+            helpRect.anchoredPosition = new Vector2(-38f, -38f);
+            helpRect.sizeDelta = new Vector2(75f, 75f);
+
+            GameObject descriptionPanel = UiFactory.Panel("ARDescriptionPanel", safeFrame.transform, new Color(0.02f, 0.06f, 0.14f, 0.86f), 22);
+            RectTransform descriptionPanelRect = descriptionPanel.GetComponent<RectTransform>();
+            descriptionPanelRect.anchorMin = new Vector2(0f, 0f);
+            descriptionPanelRect.anchorMax = new Vector2(1f, 0f);
+            descriptionPanelRect.pivot = new Vector2(0.5f, 0f);
+            descriptionPanelRect.offsetMin = new Vector2(56f, 42f);
+            descriptionPanelRect.offsetMax = new Vector2(-56f, 172f);
+
+            TextMeshProUGUI descriptionText = UiFactory.Text("ARDescription", descriptionPanel.transform, model.Description.Get(language), 24, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            descriptionText.enableAutoSizing = true;
+            descriptionText.fontSizeMax = 24;
+            descriptionText.fontSizeMin = 15;
+            UiFactory.Stretch(descriptionText.rectTransform, 28f, 18f);
 
             TextMeshProUGUI cellLabel = UiFactory.Text("ARCellLabel", safeFrame.transform, model.Name.Get(language), 36, FontStyles.Bold, MicroverseTheme.Cyan, TextAlignmentOptions.Center);
             RectTransform labelRect = cellLabel.rectTransform;
-            labelRect.anchorMin = new Vector2(0.5f, 1f);
-            labelRect.anchorMax = new Vector2(0.5f, 1f);
-            labelRect.pivot = new Vector2(0.5f, 1f);
-            labelRect.anchoredPosition = new Vector2(0f, -150f);
-            labelRect.sizeDelta = new Vector2(800f, 80f);
+            labelRect.anchorMin = new Vector2(0.5f, 0f);
+            labelRect.anchorMax = new Vector2(0.5f, 0f);
+            labelRect.pivot = new Vector2(0.5f, 0f);
+            labelRect.anchoredPosition = new Vector2(0f, 184f);
+            labelRect.sizeDelta = new Vector2(800f, 64f);
         }
 
         private void ExitARMode()

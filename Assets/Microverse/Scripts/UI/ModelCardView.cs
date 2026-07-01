@@ -103,6 +103,9 @@ namespace Microverse.UI
             });
 
             TextMeshProUGUI title = UiFactory.Text("Title", Root.transform, model.Name.Get(language), 23, FontStyles.Bold, MicroverseTheme.Text);
+            title.enableAutoSizing = true;
+            title.fontSizeMax = 23;
+            title.fontSizeMin = 14;
             RectTransform titleRect = title.rectTransform;
             titleRect.anchorMin = new Vector2(0f, 0f);
             titleRect.anchorMax = new Vector2(1f, 0f);
@@ -110,6 +113,9 @@ namespace Microverse.UI
             titleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 132f) : new Vector2(-22f, 112f);
 
             TextMeshProUGUI subtitle = UiFactory.Text("Subtitle", Root.transform, model.Subtitle.Get(language), 18, FontStyles.Normal, MicroverseTheme.MutedText);
+            subtitle.enableAutoSizing = true;
+            subtitle.fontSizeMax = 18;
+            subtitle.fontSizeMin = 12;
             RectTransform subtitleRect = subtitle.rectTransform;
             subtitleRect.anchorMin = new Vector2(0f, 0f);
             subtitleRect.anchorMax = new Vector2(1f, 0f);
@@ -124,6 +130,7 @@ namespace Microverse.UI
                 downloadRect.anchorMax = new Vector2(1f, 0f);
                 downloadRect.offsetMin = new Vector2(22f, 14f);
                 downloadRect.offsetMax = new Vector2(-22f, 54f);
+                UiFactory.ConfigureButtonLabel(download.GetComponentInChildren<TextMeshProUGUI>(), 17, 11);
             }
         }
 

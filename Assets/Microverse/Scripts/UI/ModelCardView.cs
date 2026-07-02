@@ -12,6 +12,10 @@ namespace Microverse.UI
         private static readonly Color FavoriteGold = new Color(1.0f, 0.74f, 0.18f, 1f);
         private static Sprite emptyStarSprite;
         private static Sprite filledStarSprite;
+        private readonly MicroverseLanguage language;
+        private Button downloadButton;
+        private TextMeshProUGUI downloadProgressText;
+        private RectTransform downloadProgressFillRect;
 
         public GameObject Root { get; private set; }
 
@@ -24,8 +28,11 @@ namespace Microverse.UI
             Action onFavoriteChanged = null,
             bool isAvailableForAr = true,
             bool showDownloadButton = false,
-            Action<BiologicalModel> onDownload = null)
+            Action<BiologicalModel> onDownload = null,
+            bool isDownloading = false,
+            float downloadProgress = 0f)
         {
+            this.language = language;
             Root = UiFactory.Panel("ModelCard-" + model.Id, parent, new Color(0.02f, 0.06f, 0.14f, 0.96f), 24);
             Image frame = Root.GetComponent<Image>();
             frame.color = MicroverseTheme.Panel;
@@ -124,14 +131,105 @@ namespace Microverse.UI
 
             if (showDownloadButton)
             {
-                Button download = UiFactory.Button("DownloadModel", Root.transform, getText("model.download"), () => onDownload?.Invoke(model), new Color(0.0f, 0.24f, 0.48f, 0.95f), MicroverseTheme.Cyan, 17);
+                string downloadLabel = isDownloading ? DownloadProgressLabel(language, downloadProgress) : getText("model.download");
+                Button download = UiFactory.Button("DownloadModel", Root.transform, downloadLabel, () =>
+                {
+                    if (!isDownloading)
+                    {
+                        onDownload?.Invoke(model);
+                    }
+                }, new Color(0.0f, 0.24f, 0.48f, 0.95f), MicroverseTheme.Cyan, 17);
                 RectTransform downloadRect = download.GetComponent<RectTransform>();
                 downloadRect.anchorMin = new Vector2(0f, 0f);
                 downloadRect.anchorMax = new Vector2(1f, 0f);
                 downloadRect.offsetMin = new Vector2(22f, 14f);
                 downloadRect.offsetMax = new Vector2(-22f, 54f);
-                UiFactory.ConfigureButtonLabel(download.GetComponentInChildren<TextMeshProUGUI>(), 17, 11);
+                download.interactable = !isDownloading;
+                downloadButton = download;
+
+                TextMeshProUGUI downloadText = download.GetComponentInChildren<TextMeshProUGUI>();
+                if (isDownloading)
+                {
+                    BeginDownloadProgress(downloadProgress);
+                }
+
+                UiFactory.ConfigureButtonLabel(downloadText, 17, 11);
             }
+        }
+
+        public void BeginDownloadProgress(float progress)
+        {
+            if (downloadButton == null)
+            {
+                return;
+            }
+
+            downloadButton.interactable = false;
+            if (downloadProgressText == null)
+            {
+                downloadProgressText = downloadButton.GetComponentInChildren<TextMeshProUGUI>();
+            }
+
+            if (downloadProgressFillRect == null)
+            {
+                downloadProgressFillRect = AddDownloadProgressFill(downloadButton.transform);
+            }
+
+            if (downloadProgressText != null)
+            {
+                downloadProgressText.transform.SetAsLastSibling();
+            }
+
+            SetDownloadProgress(progress);
+        }
+
+        public void SetDownloadProgress(float progress)
+        {
+            if (downloadProgressFillRect != null)
+            {
+                float clamped = Mathf.Clamp01(progress);
+                downloadProgressFillRect.anchorMax = new Vector2(clamped, 1f);
+                downloadProgressFillRect.offsetMax = Vector2.zero;
+            }
+
+            if (downloadProgressText != null)
+            {
+                downloadProgressText.text = DownloadProgressLabel(language, progress);
+            }
+        }
+
+        private static RectTransform AddDownloadProgressFill(Transform parent)
+        {
+            GameObject fillGo = new GameObject("DownloadProgressFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            fillGo.transform.SetParent(parent, false);
+            fillGo.transform.SetAsFirstSibling();
+
+            Image fill = fillGo.GetComponent<Image>();
+            fill.color = new Color(0f, 0.86f, 1f, 0.34f);
+            fill.raycastTarget = false;
+
+            RectTransform fillRect = fill.rectTransform;
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = new Vector2(0f, 1f);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            return fillRect;
+        }
+
+        private static string DownloadProgressLabel(MicroverseLanguage language, float progress)
+        {
+            int percentage = Mathf.RoundToInt(Mathf.Clamp01(progress) * 100f);
+            if (language == MicroverseLanguage.English)
+            {
+                return "Downloading " + percentage + "%";
+            }
+
+            if (language == MicroverseLanguage.Portuguese)
+            {
+                return "Baixando " + percentage + "%";
+            }
+
+            return "Descargando " + percentage + "%";
         }
 
         private static Button CreateFavoriteButton(Transform parent, bool active)

@@ -115,8 +115,10 @@ namespace Microverse.Services
             Save();
         }
 
-        public static IEnumerator DownloadModelRoutine(BiologicalModel model, Action<bool, string> onComplete)
+        public static IEnumerator DownloadModelRoutine(BiologicalModel model, Action<bool, string> onComplete, Action<float> onProgress = null)
         {
+            onProgress?.Invoke(0f);
+
             if (model == null)
             {
                 onComplete?.Invoke(false, "Model is missing.");
@@ -126,9 +128,11 @@ namespace Microverse.Services
             if (IsAvailable(model))
             {
                 EnsureLoaded();
+                onProgress?.Invoke(0.95f);
                 yield return PreviewImageStore.DownloadPreviewRoutine(model);
                 CacheDownloadedModel(model);
                 Save();
+                onProgress?.Invoke(1f);
                 onComplete?.Invoke(true, string.Empty);
                 yield break;
             }
@@ -141,7 +145,14 @@ namespace Microverse.Services
 
             using (UnityWebRequest request = UnityWebRequest.Get(model.ModelFileUrl))
             {
-                yield return request.SendWebRequest();
+                UnityWebRequestAsyncOperation operation = request.SendWebRequest();
+                while (!operation.isDone)
+                {
+                    float downloadProgress = Mathf.Clamp01(request.downloadProgress);
+                    onProgress?.Invoke(downloadProgress * 0.92f);
+                    yield return null;
+                }
+
                 if (request.result != UnityWebRequest.Result.Success)
                 {
                     onComplete?.Invoke(false, request.error);
@@ -158,12 +169,14 @@ namespace Microverse.Services
                 string filePath = Path.Combine(directory, safeName);
                 File.WriteAllBytes(filePath, request.downloadHandler.data);
 
+                onProgress?.Invoke(0.96f);
                 yield return PreviewImageStore.DownloadPreviewRoutine(model);
 
                 EnsureLoaded();
                 DownloadedPaths[model.Id] = filePath;
                 CacheDownloadedModel(model);
                 Save();
+                onProgress?.Invoke(1f);
                 onComplete?.Invoke(true, string.Empty);
             }
         }

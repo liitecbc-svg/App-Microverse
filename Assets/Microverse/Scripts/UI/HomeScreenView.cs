@@ -33,7 +33,10 @@ namespace Microverse.UI
         private readonly Dictionary<string, TextMeshProUGUI> filterLabels = new Dictionary<string, TextMeshProUGUI>();
         private readonly Dictionary<string, Image> featureImages = new Dictionary<string, Image>();
         private readonly Dictionary<string, TextMeshProUGUI> featureLabels = new Dictionary<string, TextMeshProUGUI>();
+        private readonly Dictionary<string, ModelCardView> modelCardsById = new Dictionary<string, ModelCardView>();
         private readonly HashSet<string> inlineFilterValues = new HashSet<string>();
+        private readonly HashSet<string> downloadingModelIds = new HashSet<string>();
+        private readonly Dictionary<string, float> downloadProgressById = new Dictionary<string, float>();
         private TextMeshProUGUI emptyStateText;
         private Image moreFilterImage;
         private TextMeshProUGUI moreFilterLabel;
@@ -219,16 +222,24 @@ namespace Microverse.UI
             {
                 UnityEngine.Object.Destroy(gridContent.GetChild(i).gameObject);
             }
+            modelCardsById.Clear();
 
             IEnumerable<BiologicalModel> filtered = models.Where(MatchesCatalogMode).Where(MatchesSearch).Where(MatchesCategory);
             List<BiologicalModel> visibleModels = filtered.ToList();
             foreach (BiologicalModel model in visibleModels)
             {
                 bool available = ModelDownloadStore.IsAvailable(model);
-                bool canDownload = CanDownload(model, available);
-                bool openable = available || (catalogMode == CatalogMode.Favorites && canDownload);
+                bool isDownloading = IsDownloading(model);
+                bool canDownload = CanDownload(model, available) && !isDownloading;
+                bool showDownloadControl = canDownload || isDownloading;
+                bool openable = !isDownloading && (available || (catalogMode == CatalogMode.Favorites && canDownload));
                 Action<BiologicalModel> openAction = available ? onOpenModel : DownloadModelThenOpen;
-                new ModelCardView(gridContent, model, language, openAction, getText, RefreshGrid, openable, canDownload, DownloadModel);
+                float progress = DownloadProgress(model);
+                ModelCardView card = new ModelCardView(gridContent, model, language, openAction, getText, RefreshGrid, openable, showDownloadControl, canDownload ? DownloadModel : null, isDownloading, progress);
+                if (!string.IsNullOrWhiteSpace(model.Id))
+                {
+                    modelCardsById[model.Id] = card;
+                }
             }
 
             if (emptyStateText != null)
@@ -264,6 +275,21 @@ namespace Microverse.UI
             return !available
                 && !string.IsNullOrWhiteSpace(model.ModelFileUrl)
                 && (catalogMode == CatalogMode.Library || catalogMode == CatalogMode.Favorites);
+        }
+
+        private bool IsDownloading(BiologicalModel model)
+        {
+            return model != null && !string.IsNullOrWhiteSpace(model.Id) && downloadingModelIds.Contains(model.Id);
+        }
+
+        private float DownloadProgress(BiologicalModel model)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.Id))
+            {
+                return 0f;
+            }
+
+            return downloadProgressById.TryGetValue(model.Id, out float progress) ? progress : 0f;
         }
 
         private bool MatchesSearch(BiologicalModel model)
@@ -360,26 +386,21 @@ namespace Microverse.UI
 
         private void DownloadModel(BiologicalModel model)
         {
-            MonoBehaviour runner = Root.GetComponentInParent<MonoBehaviour>();
-            if (runner == null)
-            {
-                Debug.LogWarning("Cannot download model without a coroutine runner.");
-                return;
-            }
-
-            runner.StartCoroutine(ModelDownloadStore.DownloadModelRoutine(model, (success, error) =>
-            {
-                if (!success)
-                {
-                    Debug.LogWarning("Model download failed: " + error);
-                }
-
-                RefreshGrid();
-            }));
+            StartModelDownload(model, false);
         }
 
         private void DownloadModelThenOpen(BiologicalModel model)
         {
+            StartModelDownload(model, true);
+        }
+
+        private void StartModelDownload(BiologicalModel model, bool openWhenDone)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.Id) || downloadingModelIds.Contains(model.Id))
+            {
+                return;
+            }
+
             MonoBehaviour runner = Root.GetComponentInParent<MonoBehaviour>();
             if (runner == null)
             {
@@ -387,17 +408,104 @@ namespace Microverse.UI
                 return;
             }
 
+            downloadingModelIds.Add(model.Id);
+            downloadProgressById[model.Id] = 0f;
+            if (modelCardsById.TryGetValue(model.Id, out ModelCardView card))
+            {
+                card.BeginDownloadProgress(0f);
+            }
+
             runner.StartCoroutine(ModelDownloadStore.DownloadModelRoutine(model, (success, error) =>
             {
+                downloadingModelIds.Remove(model.Id);
+                downloadProgressById.Remove(model.Id);
+
                 if (!success)
                 {
                     Debug.LogWarning("Model download failed: " + error);
-                    RefreshGrid();
+                    ReplaceModelCard(model);
                     return;
                 }
 
-                onOpenModel?.Invoke(model);
-            }));
+                if (openWhenDone)
+                {
+                    CompleteDownloadedModelCard(model);
+                    onOpenModel?.Invoke(model);
+                    return;
+                }
+
+                CompleteDownloadedModelCard(model);
+            },
+            progress => UpdateDownloadProgress(model.Id, progress)));
+        }
+
+        private void UpdateDownloadProgress(string modelId, float progress)
+        {
+            if (string.IsNullOrWhiteSpace(modelId) || !downloadingModelIds.Contains(modelId))
+            {
+                return;
+            }
+
+            downloadProgressById[modelId] = Mathf.Clamp01(progress);
+            if (modelCardsById.TryGetValue(modelId, out ModelCardView card))
+            {
+                card.SetDownloadProgress(progress);
+            }
+        }
+
+        private void CompleteDownloadedModelCard(BiologicalModel model)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.Id))
+            {
+                RefreshGrid();
+                return;
+            }
+
+            if (catalogMode == CatalogMode.Library && modelCardsById.TryGetValue(model.Id, out ModelCardView card))
+            {
+                modelCardsById.Remove(model.Id);
+                UnityEngine.Object.Destroy(card.Root);
+                UpdateEmptyStateForCurrentGrid();
+                return;
+            }
+
+            ReplaceModelCard(model);
+        }
+
+        private void ReplaceModelCard(BiologicalModel model)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.Id) || !modelCardsById.TryGetValue(model.Id, out ModelCardView oldCard))
+            {
+                RefreshGrid();
+                return;
+            }
+
+            int siblingIndex = oldCard.Root.transform.GetSiblingIndex();
+            UnityEngine.Object.Destroy(oldCard.Root);
+            modelCardsById.Remove(model.Id);
+
+            bool available = ModelDownloadStore.IsAvailable(model);
+            bool isDownloading = IsDownloading(model);
+            bool canDownload = CanDownload(model, available) && !isDownloading;
+            bool showDownloadControl = canDownload || isDownloading;
+            bool openable = !isDownloading && (available || (catalogMode == CatalogMode.Favorites && canDownload));
+            Action<BiologicalModel> openAction = available ? onOpenModel : DownloadModelThenOpen;
+            float progress = DownloadProgress(model);
+
+            ModelCardView newCard = new ModelCardView(gridContent, model, language, openAction, getText, RefreshGrid, openable, showDownloadControl, canDownload ? DownloadModel : null, isDownloading, progress);
+            newCard.Root.transform.SetSiblingIndex(siblingIndex);
+            modelCardsById[model.Id] = newCard;
+        }
+
+        private void UpdateEmptyStateForCurrentGrid()
+        {
+            if (emptyStateText == null)
+            {
+                return;
+            }
+
+            emptyStateText.text = EmptyStateText();
+            emptyStateText.gameObject.SetActive(gridContent.childCount == 0);
         }
 
         private void AddFilter(Transform parent, string label, string value)

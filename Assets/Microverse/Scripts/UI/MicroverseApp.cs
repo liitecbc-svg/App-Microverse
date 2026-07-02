@@ -155,6 +155,12 @@ namespace Microverse.UI
                 return;
             }
 
+            if (tab == "profile")
+            {
+                ShowCredits();
+                return;
+            }
+
             ShowPlaceholder(tab);
         }
 
@@ -235,6 +241,67 @@ namespace Microverse.UI
             navigationBar.RefreshLabels();
         }
 
+        private void ShowCredits()
+        {
+            activeTab = "profile";
+            ClearScreen();
+            GameObject root = new GameObject("CreditsScreen", typeof(RectTransform));
+            root.transform.SetParent(screenRoot, false);
+            UiFactory.Stretch(root.GetComponent<RectTransform>());
+            activeScreen = root;
+
+            TextMeshProUGUI title = UiFactory.Text("CreditsTitle", root.transform, GetUiText("placeholder.profile.title"), 44, FontStyles.Bold, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            RectTransform titleRect = title.rectTransform;
+            titleRect.anchorMin = new Vector2(0f, 1f);
+            titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.offsetMin = new Vector2(56f, -185f);
+            titleRect.offsetMax = new Vector2(-56f, -105f);
+
+            AddCreditSection(root.transform, "DevelopersPanel", DevelopersLabel(), "Cristhian Montenegro\nBrandon Muñoz", new Vector2(0.08f, 0.61f), new Vector2(0.92f, 0.78f), MicroverseTheme.Cyan);
+            AddCreditSection(root.transform, "AcademicPanel", AcademicCollaborationLabel(), "Dra. Cassia Yano", new Vector2(0.08f, 0.42f), new Vector2(0.92f, 0.57f), new Color(0.54f, 0.82f, 1f));
+            AddCreditSection(root.transform, "InstitutionsPanel", InstitutionsLabel(), "ULS\nLIITEC", new Vector2(0.08f, 0.20f), new Vector2(0.92f, 0.38f), new Color(0.90f, 0.74f, 0.22f));
+
+            navigationBar.RefreshLabels();
+            navigationBar.SetSelected("profile");
+        }
+
+        private void AddCreditSection(Transform parent, string name, string heading, string content, Vector2 anchorMin, Vector2 anchorMax, Color accent)
+        {
+            GameObject panel = UiFactory.Panel(name, parent, new Color(0.02f, 0.06f, 0.14f, 0.96f), 24);
+            RectTransform panelRect = panel.GetComponent<RectTransform>();
+            panelRect.anchorMin = anchorMin;
+            panelRect.anchorMax = anchorMax;
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            GameObject accentBar = UiFactory.Panel("Accent", panel.transform, accent, 8);
+            RectTransform accentRect = accentBar.GetComponent<RectTransform>();
+            accentRect.anchorMin = new Vector2(0f, 0f);
+            accentRect.anchorMax = new Vector2(0f, 1f);
+            accentRect.offsetMin = new Vector2(0f, 0f);
+            accentRect.offsetMax = new Vector2(10f, 0f);
+
+            TextMeshProUGUI label = UiFactory.Text("Heading", panel.transform, heading, 23, FontStyles.Bold, accent, TextAlignmentOptions.Left);
+            label.enableAutoSizing = true;
+            label.fontSizeMax = 23;
+            label.fontSizeMin = 14;
+            RectTransform labelRect = label.rectTransform;
+            labelRect.anchorMin = new Vector2(0f, 1f);
+            labelRect.anchorMax = new Vector2(1f, 1f);
+            labelRect.offsetMin = new Vector2(34f, -58f);
+            labelRect.offsetMax = new Vector2(-34f, -16f);
+
+            TextMeshProUGUI names = UiFactory.Text("Content", panel.transform, content, 29, FontStyles.Bold, MicroverseTheme.Text, TextAlignmentOptions.Left);
+            names.enableAutoSizing = true;
+            names.fontSizeMax = 29;
+            names.fontSizeMin = 16;
+            RectTransform namesRect = names.rectTransform;
+            namesRect.anchorMin = new Vector2(0f, 0f);
+            namesRect.anchorMax = new Vector2(1f, 1f);
+            namesRect.offsetMin = new Vector2(34f, 18f);
+            namesRect.offsetMax = new Vector2(-34f, -62f);
+        }
+
         private void CycleLanguage()
         {
             switch (language)
@@ -257,6 +324,10 @@ namespace Microverse.UI
             else if (activeTab == "home")
             {
                 ShowHome();
+            }
+            else if (activeTab == "profile")
+            {
+                ShowCredits();
             }
             else
             {
@@ -349,6 +420,10 @@ namespace Microverse.UI
             {
                 ShowHome();
             }
+            else if (activeTab == "profile")
+            {
+                ShowCredits();
+            }
             else
             {
                 ShowPlaceholder(activeTab);
@@ -358,6 +433,51 @@ namespace Microverse.UI
         private string GetUiText(string key)
         {
             return uiTextCatalog.Get(key, language);
+        }
+
+        private string DevelopersLabel()
+        {
+            if (language == MicroverseLanguage.English)
+            {
+                return "Developers";
+            }
+
+            if (language == MicroverseLanguage.Portuguese)
+            {
+                return "Desenvolvedores";
+            }
+
+            return "Desarrolladores";
+        }
+
+        private string AcademicCollaborationLabel()
+        {
+            if (language == MicroverseLanguage.English)
+            {
+                return "Academic collaboration";
+            }
+
+            if (language == MicroverseLanguage.Portuguese)
+            {
+                return "Colaboracao academica";
+            }
+
+            return "Colaboracion academica";
+        }
+
+        private string InstitutionsLabel()
+        {
+            if (language == MicroverseLanguage.English)
+            {
+                return "Collaborating institutions";
+            }
+
+            if (language == MicroverseLanguage.Portuguese)
+            {
+                return "Instituicoes colaboradoras";
+            }
+
+            return "Instituciones colaboradoras";
         }
 
         private void ClearScreen()

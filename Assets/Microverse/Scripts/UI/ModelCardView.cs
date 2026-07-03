@@ -4,6 +4,7 @@ using Microverse.Services;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 namespace Microverse.UI
 {
@@ -154,6 +155,25 @@ namespace Microverse.UI
                 }
 
                 UiFactory.ConfigureButtonLabel(downloadText, 17, 11);
+            }
+
+            // Check if the model is downloaded (only downloaded models can be deleted)
+            if (ModelDownloadStore.IsDownloaded(model.Id))
+            {
+                LongPressTrigger longPress = Root.AddComponent<LongPressTrigger>();
+                longPress.duration = 0.8f;
+                longPress.onLongPress.AddListener(() =>
+                {
+                    Canvas canvas = parent.GetComponentInParent<Canvas>();
+                    if (canvas != null)
+                    {
+                        ShowDeleteConfirmationDialog(canvas.transform, model, () =>
+                        {
+                            ModelDownloadStore.DeleteDownloadedModel(model.Id);
+                            onFavoriteChanged?.Invoke(); // Refresh the grid
+                        });
+                    }
+                });
             }
         }
 
@@ -325,6 +345,77 @@ namespace Microverse.UI
             }
 
             return inside;
+        }
+
+        private void ShowDeleteConfirmationDialog(Transform canvasTransform, BiologicalModel model, Action onDeleteConfirmed)
+        {
+            // 1. Create Modal Background (blocks all inputs behind it)
+            GameObject modalBg = UiFactory.Panel("DeleteConfirmationModal", canvasTransform, new Color(0.01f, 0.03f, 0.08f, 0.85f), 0);
+            RectTransform bgRect = modalBg.GetComponent<RectTransform>();
+            UiFactory.Stretch(bgRect);
+            
+            // Add a CanvasGroup and make it blocksRaycasts = true to ensure it blocks clicks
+            CanvasGroup bgGroup = modalBg.AddComponent<CanvasGroup>();
+            bgGroup.blocksRaycasts = true;
+
+            // 2. Create Dialog Panel (in the center)
+            GameObject dialogPanel = UiFactory.Panel("DialogPanel", modalBg.transform, new Color(0.03f, 0.10f, 0.22f, 0.98f), 24);
+            RectTransform dialogRect = dialogPanel.GetComponent<RectTransform>();
+            dialogRect.anchorMin = new Vector2(0.5f, 0.5f);
+            dialogRect.anchorMax = new Vector2(0.5f, 0.5f);
+            dialogRect.pivot = new Vector2(0.5f, 0.5f);
+            dialogRect.anchoredPosition = Vector2.zero;
+            dialogRect.sizeDelta = new Vector2(600f, 380f);
+
+            // 3. Title Text
+            string titleStr = language == MicroverseLanguage.Spanish ? "¿Eliminar modelo?" : 
+                              (language == MicroverseLanguage.Portuguese ? "Excluir modelo?" : "Delete model?");
+            TextMeshProUGUI titleText = UiFactory.Text("DialogTitle", dialogPanel.transform, titleStr, 28, FontStyles.Bold, MicroverseTheme.Cyan, TextAlignmentOptions.Center);
+            RectTransform titleRect = titleText.rectTransform;
+            titleRect.anchorMin = new Vector2(0f, 1f);
+            titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.pivot = new Vector2(0.5f, 1f);
+            titleRect.offsetMin = new Vector2(24f, -70f);
+            titleRect.offsetMax = new Vector2(-24f, -24f);
+
+            // 4. Description Text
+            string descStr = language == MicroverseLanguage.Spanish ? $"¿Estás seguro de que deseas eliminar '{model.Name.Get(language)}' de tu dispositivo? Deberás descargarlo nuevamente para verlo sin conexión." :
+                             (language == MicroverseLanguage.Portuguese ? $"Tem certeza de que deseja excluir '{model.Name.Get(language)}' do seu dispositivo? Você precisará baixá-lo novamente para vê-lo off-line." :
+                             $"Are you sure you want to delete '{model.Name.Get(language)}' from your device? You will need to download it again to view it offline.");
+            
+            TextMeshProUGUI desc = UiFactory.Text("DialogDesc", dialogPanel.transform, descStr, 20, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            RectTransform descRect = desc.rectTransform;
+            descRect.anchorMin = new Vector2(0f, 1f);
+            descRect.anchorMax = new Vector2(1f, 1f);
+            descRect.pivot = new Vector2(0.5f, 1f);
+            descRect.offsetMin = new Vector2(34f, -240f);
+            descRect.offsetMax = new Vector2(-34f, -90f);
+
+            // 5. Cancel ("No") Button
+            string noStr = language == MicroverseLanguage.Spanish ? "No" : "No";
+            Button cancelButton = UiFactory.Button("CancelButton", dialogPanel.transform, noStr, () => {
+                UnityEngine.Object.Destroy(modalBg);
+            }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
+            RectTransform cancelRect = cancelButton.GetComponent<RectTransform>();
+            cancelRect.anchorMin = new Vector2(0f, 0f);
+            cancelRect.anchorMax = new Vector2(0.5f, 0f);
+            cancelRect.pivot = new Vector2(0.5f, 0f);
+            cancelRect.offsetMin = new Vector2(34f, 28f);
+            cancelRect.offsetMax = new Vector2(-12f, 92f);
+
+            // 6. Confirm ("Sí") Button
+            string yesStr = language == MicroverseLanguage.Spanish ? "Sí" : 
+                            (language == MicroverseLanguage.Portuguese ? "Sim" : "Yes");
+            Button confirmButton = UiFactory.Button("ConfirmButton", dialogPanel.transform, yesStr, () => {
+                onDeleteConfirmed?.Invoke();
+                UnityEngine.Object.Destroy(modalBg);
+            }, new Color(0.72f, 0.15f, 0.20f, 0.95f), MicroverseTheme.Text, 22);
+            RectTransform confirmRect = confirmButton.GetComponent<RectTransform>();
+            confirmRect.anchorMin = new Vector2(0.5f, 0f);
+            confirmRect.anchorMax = new Vector2(1f, 0f);
+            confirmRect.pivot = new Vector2(0.5f, 0f);
+            confirmRect.offsetMin = new Vector2(12f, 28f);
+            confirmRect.offsetMax = new Vector2(-34f, 92f);
         }
 
     }

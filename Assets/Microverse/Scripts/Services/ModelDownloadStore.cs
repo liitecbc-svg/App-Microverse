@@ -377,5 +377,34 @@ namespace Microverse.Services
             string fileName = Path.GetFileName(clean);
             return string.IsNullOrWhiteSpace(fileName) ? string.Empty : fileName;
         }
+
+        public static void DeleteDownloadedModel(string modelId)
+        {
+            if (string.IsNullOrWhiteSpace(modelId))
+            {
+                return;
+            }
+
+            EnsureLoaded();
+            if (DownloadedPaths.TryGetValue(modelId, out string path))
+            {
+                try
+                {
+                    if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning("Failed to delete local model file: " + ex.Message);
+                }
+
+                DownloadedPaths.Remove(modelId);
+            }
+
+            DownloadedModels.Remove(modelId);
+            Save();
+        }
     }
 }

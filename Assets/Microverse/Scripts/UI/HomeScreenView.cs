@@ -89,14 +89,6 @@ namespace Microverse.UI
             logoRect.anchoredPosition = new Vector2(54f, -24f);
             logoRect.sizeDelta = new Vector2(126f, 126f);
 
-            Button settings = UiFactory.Button("LanguageButton", Root.transform, LanguageLabel(), () => onCycleLanguage(), MicroverseTheme.PanelLight, MicroverseTheme.Text, 18);
-            RectTransform settingsRect = settings.GetComponent<RectTransform>();
-            settingsRect.anchorMin = new Vector2(1f, 1f);
-            settingsRect.anchorMax = new Vector2(1f, 1f);
-            settingsRect.pivot = new Vector2(1f, 1f);
-            settingsRect.anchoredPosition = new Vector2(-42f, -44f);
-            settingsRect.sizeDelta = new Vector2(96f, 70f);
-
             TextMeshProUGUI hero = UiFactory.Text("Hero", Root.transform, getText("home.hero"), 32, FontStyles.Bold, MicroverseTheme.Text);
             RectTransform heroRect = hero.rectTransform;
             heroRect.anchorMin = new Vector2(0f, 1f);
@@ -869,18 +861,7 @@ namespace Microverse.UI
             }
         }
 
-        private string LanguageLabel()
-        {
-            switch (language)
-            {
-                case MicroverseLanguage.English:
-                    return "EN";
-                case MicroverseLanguage.Portuguese:
-                    return "PT";
-                default:
-                    return "ES";
-            }
-        }
+
 
     }
 }

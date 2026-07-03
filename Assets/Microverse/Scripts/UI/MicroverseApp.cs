@@ -186,13 +186,15 @@ namespace Microverse.UI
             startBtnRect.sizeDelta = new Vector2(340f, 75f);
 
             // 5. Menu Button (Top-Right) to open side panel
-            Button menuButton = UiFactory.Button("MenuButton", startRoot.transform, "☰", ShowSideMenu, new Color(0.05f, 0.12f, 0.28f, 0.85f), MicroverseTheme.Cyan, 30);
+            string menuLabel = language == MicroverseLanguage.Spanish ? "MENÚ" :
+                               (language == MicroverseLanguage.Portuguese ? "MENU" : "MENU");
+            Button menuButton = UiFactory.Button("MenuButton", startRoot.transform, menuLabel, ShowSideMenu, new Color(0.05f, 0.12f, 0.28f, 0.85f), MicroverseTheme.Cyan, 22);
             RectTransform menuRect = menuButton.GetComponent<RectTransform>();
             menuRect.anchorMin = new Vector2(1f, 1f);
             menuRect.anchorMax = new Vector2(1f, 1f);
             menuRect.pivot = new Vector2(1f, 1f);
             menuRect.anchoredPosition = new Vector2(-38f, -38f);
-            menuRect.sizeDelta = new Vector2(75f, 75f);
+            menuRect.sizeDelta = new Vector2(160f, 75f);
         }
 
         private void ShowInstructionsOverlay()
@@ -325,31 +327,31 @@ namespace Microverse.UI
                                (language == MicroverseLanguage.Portuguese ? "Idioma" : "Language");
             Button langBtn = UiFactory.Button("LanguageBtn", sidePanel.transform, langLabel, () => ShowLanguageSubPanel(overlay.transform, sidePanel.transform), MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
             RectTransform langRect = langBtn.GetComponent<RectTransform>();
-            langRect.anchorMin = new Vector2(0f, 0.70f);
-            langRect.anchorMax = new Vector2(1f, 0.70f);
+            langRect.anchorMin = new Vector2(0.1f, 0.70f);
+            langRect.anchorMax = new Vector2(0.9f, 0.70f);
             langRect.pivot = new Vector2(0.5f, 0.5f);
             langRect.anchoredPosition = Vector2.zero;
-            langRect.sizeDelta = new Vector2(400f, 75f);
+            langRect.sizeDelta = new Vector2(0f, 75f);
 
             string aboutLabel = language == MicroverseLanguage.Spanish ? "Acerca de" :
                                 (language == MicroverseLanguage.Portuguese ? "Sobre" : "About");
             Button aboutBtn = UiFactory.Button("AboutBtn", sidePanel.transform, aboutLabel, () => ShowCreditsOverlay(overlay.transform), MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
             RectTransform aboutRect = aboutBtn.GetComponent<RectTransform>();
-            aboutRect.anchorMin = new Vector2(0f, 0.55f);
-            aboutRect.anchorMax = new Vector2(1f, 0.55f);
+            aboutRect.anchorMin = new Vector2(0.1f, 0.55f);
+            aboutRect.anchorMax = new Vector2(0.9f, 0.55f);
             aboutRect.pivot = new Vector2(0.5f, 0.5f);
             aboutRect.anchoredPosition = Vector2.zero;
-            aboutRect.sizeDelta = new Vector2(400f, 75f);
+            aboutRect.sizeDelta = new Vector2(0f, 75f);
 
             string closeText = language == MicroverseLanguage.Spanish ? "Cerrar" :
                                (language == MicroverseLanguage.Portuguese ? "Fechar" : "Close");
             Button closeBtn = UiFactory.Button("CloseMenuBtn", sidePanel.transform, closeText, () => UnityEngine.Object.Destroy(overlay), new Color(0.0f, 0.42f, 0.68f, 0.95f), MicroverseTheme.Text, 22);
             RectTransform closeRect = closeBtn.GetComponent<RectTransform>();
-            closeRect.anchorMin = new Vector2(0f, 0.15f);
-            closeRect.anchorMax = new Vector2(1f, 0.15f);
+            closeRect.anchorMin = new Vector2(0.1f, 0.15f);
+            closeRect.anchorMax = new Vector2(0.9f, 0.15f);
             closeRect.pivot = new Vector2(0.5f, 0.5f);
             closeRect.anchoredPosition = Vector2.zero;
-            closeRect.sizeDelta = new Vector2(400f, 75f);
+            closeRect.sizeDelta = new Vector2(0f, 75f);
         }
 
         private void ShowLanguageSubPanel(Transform overlayTransform, Transform sidePanelTransform)
@@ -388,27 +390,27 @@ namespace Microverse.UI
 
             Button esBtn = UiFactory.Button("EsBtn", subPanel.transform, "Español", () => SetAppLanguage(MicroverseLanguage.Spanish, overlayTransform), MicroverseTheme.PanelLight, language == MicroverseLanguage.Spanish ? MicroverseTheme.Cyan : MicroverseTheme.Text, 22);
             RectTransform esRect = esBtn.GetComponent<RectTransform>();
-            esRect.anchorMin = new Vector2(0f, 0.70f);
-            esRect.anchorMax = new Vector2(1f, 0.70f);
+            esRect.anchorMin = new Vector2(0.1f, 0.70f);
+            esRect.anchorMax = new Vector2(0.9f, 0.70f);
             esRect.pivot = new Vector2(0.5f, 0.5f);
             esRect.anchoredPosition = Vector2.zero;
-            esRect.sizeDelta = new Vector2(400f, 75f);
+            esRect.sizeDelta = new Vector2(0f, 75f);
 
             Button enBtn = UiFactory.Button("EnBtn", subPanel.transform, "English", () => SetAppLanguage(MicroverseLanguage.English, overlayTransform), MicroverseTheme.PanelLight, language == MicroverseLanguage.English ? MicroverseTheme.Cyan : MicroverseTheme.Text, 22);
             RectTransform enRect = enBtn.GetComponent<RectTransform>();
-            enRect.anchorMin = new Vector2(0f, 0.55f);
-            enRect.anchorMax = new Vector2(1f, 0.55f);
+            enRect.anchorMin = new Vector2(0.1f, 0.55f);
+            enRect.anchorMax = new Vector2(0.9f, 0.55f);
             enRect.pivot = new Vector2(0.5f, 0.5f);
             enRect.anchoredPosition = Vector2.zero;
-            enRect.sizeDelta = new Vector2(400f, 75f);
+            enRect.sizeDelta = new Vector2(0f, 75f);
 
             Button ptBtn = UiFactory.Button("PtBtn", subPanel.transform, "Português", () => SetAppLanguage(MicroverseLanguage.Portuguese, overlayTransform), MicroverseTheme.PanelLight, language == MicroverseLanguage.Portuguese ? MicroverseTheme.Cyan : MicroverseTheme.Text, 22);
             RectTransform ptRect = ptBtn.GetComponent<RectTransform>();
-            ptRect.anchorMin = new Vector2(0f, 0.40f);
-            ptRect.anchorMax = new Vector2(1f, 0.40f);
+            ptRect.anchorMin = new Vector2(0.1f, 0.40f);
+            ptRect.anchorMax = new Vector2(0.9f, 0.40f);
             ptRect.pivot = new Vector2(0.5f, 0.5f);
             ptRect.anchoredPosition = Vector2.zero;
-            ptRect.sizeDelta = new Vector2(400f, 75f);
+            ptRect.sizeDelta = new Vector2(0f, 75f);
         }
 
         private void SetAppLanguage(MicroverseLanguage lang, Transform overlayTransform)

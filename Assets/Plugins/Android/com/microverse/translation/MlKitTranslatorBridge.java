@@ -14,6 +14,7 @@ import java.util.Map;
 public class MlKitTranslatorBridge {
     private final Activity activity;
     private final Map<String, Translator> translators = new HashMap<>();
+    private boolean modelPreparationCancelled = false;
 
     public MlKitTranslatorBridge(Activity activity) {
         this.activity = activity;
@@ -34,12 +35,64 @@ public class MlKitTranslatorBridge {
         translateAtIndex(0, texts, sourceLanguages, targetLanguages, results, callback);
     }
 
+    public void prepareModels(String sourceLanguage, String[] targetLanguages, MlKitModelDownloadCallback callback) {
+        if (targetLanguages == null) {
+            callback.onError("Target languages must not be null.");
+            return;
+        }
+
+        modelPreparationCancelled = false;
+        runOnUiThread(() -> callback.onProgress(0f, ""));
+        prepareModelAtIndex(0, normalizeLanguage(sourceLanguage), targetLanguages, callback);
+    }
+
+    public void cancelModelPreparation() {
+        modelPreparationCancelled = true;
+    }
+
     public void close() {
         for (Translator translator : translators.values()) {
             translator.close();
         }
 
         translators.clear();
+    }
+
+    private void prepareModelAtIndex(int index, String source, String[] targetLanguages, MlKitModelDownloadCallback callback) {
+        if (modelPreparationCancelled) {
+            runOnUiThread(callback::onCancelled);
+            return;
+        }
+
+        if (index >= targetLanguages.length) {
+            runOnUiThread(() -> callback.onProgress(1f, ""));
+            runOnUiThread(callback::onSuccess);
+            return;
+        }
+
+        String target = normalizeLanguage(targetLanguages[index]);
+        if (source.equals(target)) {
+            float progress = (index + 1f) / targetLanguages.length;
+            runOnUiThread(() -> callback.onProgress(progress, target));
+            prepareModelAtIndex(index + 1, source, targetLanguages, callback);
+            return;
+        }
+
+        Translator translator = getTranslator(source, target);
+        if (translator == null) {
+            callback.onError("Unsupported ML Kit language pair: " + source + " -> " + target);
+            return;
+        }
+
+        runOnUiThread(() -> callback.onProgress((float) index / targetLanguages.length, target));
+        DownloadConditions conditions = new DownloadConditions.Builder().build();
+        translator.downloadModelIfNeeded(conditions)
+            .addOnSuccessListener(unused -> {
+                float progress = (index + 1f) / targetLanguages.length;
+                runOnUiThread(() -> callback.onProgress(progress, target));
+                prepareModelAtIndex(index + 1, source, targetLanguages, callback);
+            })
+            .addOnFailureListener(exception -> callback.onError(exception.getMessage()));
     }
 
     private void translateAtIndex(

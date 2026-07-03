@@ -23,7 +23,7 @@ namespace Microverse.UI
         private const float CatalogCardAspect = 350f / 300f;
         private static readonly Vector2 CatalogGridSpacing = new Vector2(24f, 24f);
 
-        private enum CatalogMode
+        public enum CatalogMode
         {
             Ar,
             Library,
@@ -42,8 +42,6 @@ namespace Microverse.UI
         private RectTransform catalogViewportRect;
         private readonly Dictionary<string, Image> filterImages = new Dictionary<string, Image>();
         private readonly Dictionary<string, TextMeshProUGUI> filterLabels = new Dictionary<string, TextMeshProUGUI>();
-        private readonly Dictionary<string, Image> featureImages = new Dictionary<string, Image>();
-        private readonly Dictionary<string, TextMeshProUGUI> featureLabels = new Dictionary<string, TextMeshProUGUI>();
         private readonly Dictionary<string, ModelCardView> modelCardsById = new Dictionary<string, ModelCardView>();
         private readonly HashSet<string> inlineFilterValues = new HashSet<string>();
         private readonly HashSet<string> downloadingModelIds = new HashSet<string>();
@@ -54,22 +52,22 @@ namespace Microverse.UI
         private GameObject categoryPickerOverlay;
         private string searchTerm = string.Empty;
         private string categoryFilter = string.Empty;
-        private CatalogMode catalogMode = CatalogMode.Ar;
+        private readonly CatalogMode catalogMode;
 
-        public HomeScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, IReadOnlyList<string> categories, MicroverseLanguage language, Action<BiologicalModel> onOpenModel, Action onCycleLanguage, Func<string, string> getText)
+        public HomeScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, IReadOnlyList<string> categories, MicroverseLanguage language, Action<BiologicalModel> onOpenModel, Action onCycleLanguage, Func<string, string> getText, CatalogMode catalogMode = CatalogMode.Ar)
         {
             this.models = models;
             this.language = language;
             this.onOpenModel = onOpenModel;
             this.onCycleLanguage = onCycleLanguage;
             this.getText = getText;
+            this.catalogMode = catalogMode;
 
             Root = new GameObject("HomeScreen", typeof(RectTransform));
             Root.transform.SetParent(parent, false);
             UiFactory.Stretch(Root.GetComponent<RectTransform>());
 
             BuildHeader();
-            BuildFeatureRow();
             BuildSearchAndFilters();
             gridContent = BuildCatalogGrid();
             RefreshGrid();
@@ -97,37 +95,14 @@ namespace Microverse.UI
             heroRect.offsetMax = new Vector2(-54f, -175f);
         }
 
-        private void BuildFeatureRow()
-        {
-            GameObject row = new GameObject("FeatureRow", typeof(RectTransform));
-            row.transform.SetParent(Root.transform, false);
-            RectTransform rect = row.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.offsetMin = new Vector2(54f, -389f);
-            rect.offsetMax = new Vector2(-54f, -297f);
-
-            HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 18;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = true;
-
-            AddFeature(row.transform, "ar", getText("home.feature.ar.title"), true, () => SetCatalogMode(CatalogMode.Ar));
-            AddFeature(row.transform, "library", getText("home.feature.library.title"), false, () => SetCatalogMode(CatalogMode.Library));
-            AddFeature(row.transform, "favorites", getText("home.feature.favorites.title"), false, () => SetCatalogMode(CatalogMode.Favorites));
-            RefreshFeatureSelection();
-        }
-
         private void BuildSearchAndFilters()
         {
             TMP_InputField input = UiFactory.Input("SearchInput", Root.transform, getText("home.search.placeholder"));
             RectTransform inputRect = input.GetComponent<RectTransform>();
             inputRect.anchorMin = new Vector2(0f, 1f);
             inputRect.anchorMax = new Vector2(1f, 1f);
-            inputRect.offsetMin = new Vector2(54f, -466f);
-            inputRect.offsetMax = new Vector2(-54f, -410f);
+            inputRect.offsetMin = new Vector2(54f, -392f);
+            inputRect.offsetMax = new Vector2(-54f, -336f);
             input.onValueChanged.AddListener(value =>
             {
                 searchTerm = value.ToLowerInvariant();
@@ -139,8 +114,8 @@ namespace Microverse.UI
             RectTransform filtersRect = filters.GetComponent<RectTransform>();
             filtersRect.anchorMin = new Vector2(0f, 1f);
             filtersRect.anchorMax = new Vector2(1f, 1f);
-            filtersRect.offsetMin = new Vector2(54f, -538f);
-            filtersRect.offsetMax = new Vector2(-54f, -480f);
+            filtersRect.offsetMin = new Vector2(54f, -464f);
+            filtersRect.offsetMax = new Vector2(-54f, -406f);
 
             HorizontalLayoutGroup layout = filters.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = FilterSpacing;
@@ -188,7 +163,7 @@ namespace Microverse.UI
             viewportRect.anchorMin = new Vector2(0f, 0f);
             viewportRect.anchorMax = new Vector2(1f, 1f);
             viewportRect.offsetMin = new Vector2(54f, 172f);
-            viewportRect.offsetMax = new Vector2(-54f, -572f);
+            viewportRect.offsetMax = new Vector2(-54f, -498f);
 
             ScrollRect scroll = viewport.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -228,7 +203,7 @@ namespace Microverse.UI
             emptyRect.anchorMin = new Vector2(0f, 0f);
             emptyRect.anchorMax = new Vector2(1f, 1f);
             emptyRect.offsetMin = new Vector2(70f, 172f);
-            emptyRect.offsetMax = new Vector2(-70f, -572f);
+            emptyRect.offsetMax = new Vector2(-70f, -498f);
             emptyStateText.gameObject.SetActive(false);
             return content.transform;
         }
@@ -380,71 +355,6 @@ namespace Microverse.UI
                 model.Subtitle.Get(MicroverseLanguage.English) + " " +
                 model.Subtitle.Get(MicroverseLanguage.Portuguese)).ToLowerInvariant();
             return value.Contains(categoryFilter);
-        }
-
-        private void AddFeature(Transform parent, string key, string title, bool active, Action onClick)
-        {
-            GameObject item = UiFactory.Panel("Feature-" + title, parent, active ? new Color(0.02f, 0.14f, 0.30f, 0.95f) : MicroverseTheme.Panel, 18);
-            Button button = item.AddComponent<Button>();
-            button.targetGraphic = item.GetComponent<Image>();
-            button.colors = UiFactory.ButtonColors(active ? new Color(0.02f, 0.14f, 0.30f, 0.95f) : MicroverseTheme.Panel);
-            button.onClick.AddListener(() => onClick?.Invoke());
-
-            VerticalLayoutGroup layout = item.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(24, 18, 0, 0);
-            layout.spacing = 0;
-            layout.childControlHeight = true;
-            layout.childControlWidth = true;
-            layout.childForceExpandHeight = true;
-            layout.childAlignment = TextAnchor.MiddleCenter;
-
-            TextMeshProUGUI titleText = UiFactory.Text("Title", item.transform, title, 25, FontStyles.Bold, MicroverseTheme.Text);
-            titleText.enableAutoSizing = true;
-            titleText.fontSizeMax = 27;
-            titleText.fontSizeMin = 13;
-            titleText.enableWordWrapping = true;
-            titleText.maxVisibleLines = 2;
-            titleText.alignment = TextAlignmentOptions.Center;
-            featureImages[key] = item.GetComponent<Image>();
-            featureLabels[key] = titleText;
-        }
-
-        private void SetCatalogMode(CatalogMode mode)
-        {
-            catalogMode = mode;
-            categoryFilter = string.Empty;
-            CloseCategoryPicker();
-            RefreshFeatureSelection();
-            RefreshFilterSelection();
-            RefreshGrid();
-        }
-
-        private void RefreshFeatureSelection()
-        {
-            foreach (KeyValuePair<string, Image> entry in featureImages)
-            {
-                bool active = entry.Key == CatalogModeKey();
-                entry.Value.color = active ? new Color(0.02f, 0.14f, 0.30f, 0.95f) : MicroverseTheme.Panel;
-            }
-
-            foreach (KeyValuePair<string, TextMeshProUGUI> entry in featureLabels)
-            {
-                bool active = entry.Key == CatalogModeKey();
-                entry.Value.color = active ? MicroverseTheme.Cyan : MicroverseTheme.Text;
-            }
-        }
-
-        private string CatalogModeKey()
-        {
-            switch (catalogMode)
-            {
-                case CatalogMode.Library:
-                    return "library";
-                case CatalogMode.Favorites:
-                    return "favorites";
-                default:
-                    return "ar";
-            }
         }
 
         private void DownloadModel(BiologicalModel model)

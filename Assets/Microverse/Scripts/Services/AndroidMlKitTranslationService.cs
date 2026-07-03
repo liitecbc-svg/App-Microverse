@@ -34,6 +34,59 @@ namespace Microverse.Services
         }
 #endif
 
+        public void PrepareOfflineModels(string sourceLanguage, IReadOnlyList<string> targetLanguages, Action<float, string> onProgress, Action onSuccess, Action<string> onError, Action onCancelled)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (targetLanguages == null || targetLanguages.Count == 0)
+            {
+                onProgress?.Invoke(1f, string.Empty);
+                onSuccess?.Invoke();
+                return;
+            }
+
+            string[] targets = new string[targetLanguages.Count];
+            for (int i = 0; i < targetLanguages.Count; i++)
+            {
+                targets[i] = targetLanguages[i];
+            }
+
+            MlKitModelDownloadCallback callback = new MlKitModelDownloadCallback(
+                (progress, languageCode) =>
+                {
+                    UnityMainThreadDispatcher.Enqueue(() => onProgress?.Invoke(progress, languageCode));
+                },
+                () =>
+                {
+                    UnityMainThreadDispatcher.Enqueue(() => onSuccess?.Invoke());
+                },
+                error =>
+                {
+                    UnityMainThreadDispatcher.Enqueue(() =>
+                    {
+                        Debug.LogWarning("ML Kit model preparation failed: " + error);
+                        onError?.Invoke(error);
+                    });
+                },
+                () =>
+                {
+                    UnityMainThreadDispatcher.Enqueue(() => onCancelled?.Invoke());
+                });
+
+            bridge.Call("prepareModels", sourceLanguage, targets, callback);
+#else
+            fallback.PrepareOfflineModels(sourceLanguage, targetLanguages, onProgress, onSuccess, onError, onCancelled);
+#endif
+        }
+
+        public void CancelOfflineModelPreparation()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            bridge.Call("cancelModelPreparation");
+#else
+            fallback.CancelOfflineModelPreparation();
+#endif
+        }
+
         public void TranslateBatch(IReadOnlyList<TranslationRequest> requests, Action<IReadOnlyList<string>> onSuccess, Action<string> onError)
         {
             if (requests == null || requests.Count == 0)
@@ -127,4 +180,43 @@ namespace Microverse.Services
 #endif
         }
     }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    public class MlKitModelDownloadCallback : AndroidJavaProxy
+    {
+        private readonly Action<float, string> progressHandler;
+        private readonly Action successHandler;
+        private readonly Action<string> errorHandler;
+        private readonly Action cancelledHandler;
+
+        public MlKitModelDownloadCallback(Action<float, string> onProgress, Action onSuccess, Action<string> onError, Action onCancelled)
+            : base("com.microverse.translation.MlKitModelDownloadCallback")
+        {
+            progressHandler = onProgress;
+            successHandler = onSuccess;
+            errorHandler = onError;
+            cancelledHandler = onCancelled;
+        }
+
+        public void onProgress(float progress, string languageCode)
+        {
+            progressHandler?.Invoke(progress, languageCode);
+        }
+
+        public void onSuccess()
+        {
+            successHandler?.Invoke();
+        }
+
+        public void onError(string message)
+        {
+            errorHandler?.Invoke(message);
+        }
+
+        public void onCancelled()
+        {
+            cancelledHandler?.Invoke();
+        }
+    }
+#endif
 }

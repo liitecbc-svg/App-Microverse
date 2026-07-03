@@ -136,8 +136,14 @@ namespace Microverse.UI
             UiFactory.Stretch(startRoot.GetComponent<RectTransform>());
             activeScreen = startRoot;
 
-            // 1. Add Background (procedural start screen background)
-            Image bg = UiFactory.Image("Background", startRoot.transform, BiologyVisualFactory.CreateBackground(), Color.white);
+            // 1. Add Background
+            Texture2D bgTex = Resources.Load<Texture2D>("AppLogo/start-bg");
+            Sprite bgSprite = null;
+            if (bgTex != null)
+            {
+                bgSprite = Sprite.Create(bgTex, new Rect(0, 0, bgTex.width, bgTex.height), new Vector2(0.5f, 0.5f));
+            }
+            Image bg = UiFactory.Image("Background", startRoot.transform, bgSprite != null ? bgSprite : BiologyVisualFactory.CreateBackground(), Color.white);
             UiFactory.Stretch(bg.rectTransform);
             bg.type = Image.Type.Simple;
 

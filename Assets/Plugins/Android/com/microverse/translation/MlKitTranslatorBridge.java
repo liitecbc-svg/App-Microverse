@@ -71,7 +71,7 @@ public class MlKitTranslatorBridge {
             return;
         }
 
-        DownloadConditions conditions = new DownloadConditions.Builder().requireWifi().build();
+        DownloadConditions conditions = new DownloadConditions.Builder().build();
         translator.downloadModelIfNeeded(conditions)
             .continueWithTask(task -> {
                 if (!task.isSuccessful()) {

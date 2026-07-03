@@ -14,6 +14,7 @@ namespace Microverse.UI
         private static Sprite emptyStarSprite;
         private static Sprite filledStarSprite;
         private readonly MicroverseLanguage language;
+        private readonly Func<string, string> getText;
         private Button downloadButton;
         private TextMeshProUGUI downloadProgressText;
         private RectTransform downloadProgressFillRect;
@@ -31,9 +32,12 @@ namespace Microverse.UI
             bool showDownloadButton = false,
             Action<BiologicalModel> onDownload = null,
             bool isDownloading = false,
-            float downloadProgress = 0f)
+            float downloadProgress = 0f,
+            float cardWidth = 300f,
+            float cardHeight = 350f)
         {
             this.language = language;
+            this.getText = getText;
             Root = UiFactory.Panel("ModelCard-" + model.Id, parent, new Color(0.02f, 0.06f, 0.14f, 0.96f), 24);
             Image frame = Root.GetComponent<Image>();
             frame.color = MicroverseTheme.Panel;
@@ -50,11 +54,11 @@ namespace Microverse.UI
             });
 
             RectTransform rect = Root.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(294f, 324f);
+            rect.sizeDelta = new Vector2(cardWidth, cardHeight);
 
             GameObject visualWell = UiFactory.Panel("VisualWell", Root.transform, new Color(0.01f, 0.04f, 0.10f, 0.94f), 20);
             RectTransform wellRect = visualWell.GetComponent<RectTransform>();
-            wellRect.anchorMin = new Vector2(0f, 0.36f);
+            wellRect.anchorMin = new Vector2(0f, 0.43f);
             wellRect.anchorMax = new Vector2(1f, 1f);
             wellRect.offsetMin = new Vector2(8f, 6f);
             wellRect.offsetMax = new Vector2(-8f, -8f);
@@ -114,25 +118,27 @@ namespace Microverse.UI
             title.enableAutoSizing = true;
             title.fontSizeMax = 23;
             title.fontSizeMin = 14;
+            title.maxVisibleLines = 2;
             RectTransform titleRect = title.rectTransform;
             titleRect.anchorMin = new Vector2(0f, 0f);
             titleRect.anchorMax = new Vector2(1f, 0f);
-            titleRect.offsetMin = showDownloadButton ? new Vector2(22f, 88f) : new Vector2(22f, 64f);
-            titleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 132f) : new Vector2(-22f, 112f);
+            titleRect.offsetMin = showDownloadButton ? new Vector2(22f, 98f) : new Vector2(22f, 78f);
+            titleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 148f) : new Vector2(-22f, 132f);
 
             TextMeshProUGUI subtitle = UiFactory.Text("Subtitle", Root.transform, model.Subtitle.Get(language), 18, FontStyles.Normal, MicroverseTheme.MutedText);
             subtitle.enableAutoSizing = true;
             subtitle.fontSizeMax = 18;
             subtitle.fontSizeMin = 12;
+            subtitle.maxVisibleLines = 2;
             RectTransform subtitleRect = subtitle.rectTransform;
             subtitleRect.anchorMin = new Vector2(0f, 0f);
             subtitleRect.anchorMax = new Vector2(1f, 0f);
-            subtitleRect.offsetMin = showDownloadButton ? new Vector2(22f, 60f) : new Vector2(22f, 34f);
-            subtitleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 88f) : new Vector2(-22f, 66f);
+            subtitleRect.offsetMin = showDownloadButton ? new Vector2(22f, 58f) : new Vector2(22f, 36f);
+            subtitleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 96f) : new Vector2(-22f, 76f);
 
             if (showDownloadButton)
             {
-                string downloadLabel = isDownloading ? DownloadProgressLabel(language, downloadProgress) : getText("model.download");
+                string downloadLabel = isDownloading ? DownloadProgressLabel(downloadProgress) : getText("model.download");
                 Button download = UiFactory.Button("DownloadModel", Root.transform, downloadLabel, () =>
                 {
                     if (!isDownloading)
@@ -214,7 +220,7 @@ namespace Microverse.UI
 
             if (downloadProgressText != null)
             {
-                downloadProgressText.text = DownloadProgressLabel(language, progress);
+                downloadProgressText.text = DownloadProgressLabel(progress);
             }
         }
 
@@ -236,20 +242,11 @@ namespace Microverse.UI
             return fillRect;
         }
 
-        private static string DownloadProgressLabel(MicroverseLanguage language, float progress)
+        private string DownloadProgressLabel(float progress)
         {
             int percentage = Mathf.RoundToInt(Mathf.Clamp01(progress) * 100f);
-            if (language == MicroverseLanguage.English)
-            {
-                return "Downloading " + percentage + "%";
-            }
-
-            if (language == MicroverseLanguage.Portuguese)
-            {
-                return "Baixando " + percentage + "%";
-            }
-
-            return "Descargando " + percentage + "%";
+            string format = getText != null ? getText("model.downloading") : "Downloading {0}%";
+            return format.Replace("{0}", percentage.ToString());
         }
 
         private static Button CreateFavoriteButton(Transform parent, bool active)

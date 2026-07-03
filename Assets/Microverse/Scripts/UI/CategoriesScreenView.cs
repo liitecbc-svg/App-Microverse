@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microverse.Data;
+using Microverse.Services;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +13,6 @@ namespace Microverse.UI
         public GameObject Root { get; private set; }
 
         private readonly IReadOnlyList<BiologicalModel> models;
-        private readonly IReadOnlyList<string> categories;
         private readonly MicroverseLanguage language;
         private readonly Action<BiologicalModel> onOpenModel;
         private readonly Func<string, string> getText;
@@ -27,7 +26,6 @@ namespace Microverse.UI
             Func<string, string> getText)
         {
             this.models = models;
-            this.categories = categories;
             this.language = language;
             this.onOpenModel = onOpenModel;
             this.getText = getText;
@@ -102,23 +100,38 @@ namespace Microverse.UI
             verticalScroll.viewport = mask.GetComponent<RectTransform>();
             verticalScroll.content = contentRect;
 
-            // Generate row for each category
-            if (categories != null)
+            // Generate one row per translated model category.
+            Dictionary<string, List<BiologicalModel>> groupedModels = new Dictionary<string, List<BiologicalModel>>();
+            if (models != null)
             {
-                foreach (string categoryName in categories)
+                foreach (BiologicalModel model in models)
                 {
-                    // Filter models for this category
-                    var categoryModels = models.Where(m => 
-                        m.Category.Get(MicroverseLanguage.Spanish).Equals(categoryName, StringComparison.OrdinalIgnoreCase) ||
-                        m.Category.Get(MicroverseLanguage.English).Equals(categoryName, StringComparison.OrdinalIgnoreCase) ||
-                        m.Category.Get(MicroverseLanguage.Portuguese).Equals(categoryName, StringComparison.OrdinalIgnoreCase)
-                    ).ToList();
-
-                    // Only show rows that contain at least one model
-                    if (categoryModels.Count > 0)
+                    if (model == null || model.Category == null || !ModelDownloadStore.IsAvailable(model))
                     {
-                        BuildCategoryRow(content.transform, categoryName, categoryModels);
+                        continue;
                     }
+
+                    string key = CategoryKey(model.Category);
+                    if (string.IsNullOrWhiteSpace(key))
+                    {
+                        continue;
+                    }
+
+                    if (!groupedModels.TryGetValue(key, out List<BiologicalModel> categoryModels))
+                    {
+                        categoryModels = new List<BiologicalModel>();
+                        groupedModels[key] = categoryModels;
+                    }
+
+                    categoryModels.Add(model);
+                }
+            }
+
+            foreach (KeyValuePair<string, List<BiologicalModel>> entry in groupedModels)
+            {
+                if (entry.Value.Count > 0)
+                {
+                    BuildCategoryRow(content.transform, DisplayCategoryLabel(entry.Value), entry.Value);
                 }
             }
         }
@@ -128,7 +141,7 @@ namespace Microverse.UI
             GameObject rowContainer = new GameObject("Row-" + categoryName, typeof(RectTransform));
             rowContainer.transform.SetParent(parent, false);
             RectTransform rowRect = rowContainer.GetComponent<RectTransform>();
-            rowRect.sizeDelta = new Vector2(0f, 400f);
+            rowRect.sizeDelta = new Vector2(0f, 432f);
 
             VerticalLayoutGroup rowLayout = rowContainer.AddComponent<VerticalLayoutGroup>();
             rowLayout.spacing = 12;
@@ -145,7 +158,7 @@ namespace Microverse.UI
             // Horizontal ScrollView for model cards
             GameObject horizontalViewport = UiFactory.Panel("HorizontalViewport", rowContainer.transform, new Color(0f, 0f, 0f, 0f), 0);
             RectTransform horizViewportRect = horizontalViewport.GetComponent<RectTransform>();
-            horizViewportRect.sizeDelta = new Vector2(0f, 334f);
+            horizViewportRect.sizeDelta = new Vector2(0f, 372f);
 
             ScrollRect horizontalScroll = horizontalViewport.AddComponent<ScrollRect>();
             horizontalScroll.horizontal = true;
@@ -165,7 +178,7 @@ namespace Microverse.UI
             horizContentRect.anchorMax = new Vector2(0f, 0.5f);
             horizContentRect.pivot = new Vector2(0f, 0.5f);
             horizContentRect.anchoredPosition = Vector2.zero;
-            horizContentRect.sizeDelta = new Vector2(0f, 324f);
+            horizContentRect.sizeDelta = new Vector2(0f, 350f);
 
             HorizontalLayoutGroup horizLayout = horizContent.AddComponent<HorizontalLayoutGroup>();
             horizLayout.spacing = 18;
@@ -185,6 +198,39 @@ namespace Microverse.UI
             {
                 new ModelCardView(horizContent.transform, model, language, onOpenModel, getText);
             }
+        }
+
+        private string DisplayCategoryLabel(IReadOnlyList<BiologicalModel> categoryModels)
+        {
+            if (categoryModels == null)
+            {
+                return string.Empty;
+            }
+
+            foreach (BiologicalModel model in categoryModels)
+            {
+                if (model != null && model.Category != null)
+                {
+                    string translated = model.Category.Get(language);
+                    if (!string.IsNullOrWhiteSpace(translated))
+                    {
+                        return translated;
+                    }
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private string CategoryKey(LocalizedText category)
+        {
+            string key = category.Get(MicroverseLanguage.English);
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = category.Get(MicroverseLanguage.Spanish);
+            }
+
+            return string.IsNullOrWhiteSpace(key) ? string.Empty : key.ToLowerInvariant();
         }
     }
 }

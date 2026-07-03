@@ -72,6 +72,7 @@ namespace Microverse.UI
             Image bg = UiFactory.Image("Background", loadingGo.transform, BiologyVisualFactory.CreateBackground(), Color.white);
             UiFactory.Stretch(bg.rectTransform);
             bg.type = Image.Type.Simple;
+            bg.preserveAspect = false;
 
             // 2. Loading Panel
             GameObject card = UiFactory.Panel("LoadingCard", loadingGo.transform, new Color(0.02f, 0.06f, 0.14f, 0.90f), 28);
@@ -146,6 +147,7 @@ namespace Microverse.UI
             Image bg = UiFactory.Image("Background", startRoot.transform, bgSprite != null ? bgSprite : BiologyVisualFactory.CreateBackground(), Color.white);
             UiFactory.Stretch(bg.rectTransform);
             bg.type = Image.Type.Simple;
+            bg.preserveAspect = false;
 
             Color themeBlue = new Color(0.015f, 0.415f, 0.678f); // ULS Blue #046AAD
 

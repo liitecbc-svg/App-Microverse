@@ -556,6 +556,7 @@ namespace Microverse.UI
             CanvasScaler bgScaler = arBackgroundCanvas.GetComponent<CanvasScaler>();
             bgScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             bgScaler.referenceResolution = new Vector2(1080f, 1920f);
+            bgScaler.matchWidthOrHeight = 0.55f;
 
             GameObject rawImageGo = new GameObject("CameraFeed", typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
             rawImageGo.transform.SetParent(arBackgroundCanvas.transform, false);
@@ -596,6 +597,7 @@ namespace Microverse.UI
             CanvasScaler overlayScaler = arOverlayCanvas.GetComponent<CanvasScaler>();
             overlayScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             overlayScaler.referenceResolution = new Vector2(1080f, 1920f);
+            overlayScaler.matchWidthOrHeight = 0.55f;
 
             GameObject safeFrame = UiFactory.Panel("ARFrame", arOverlayCanvas.transform, new Color(0.01f, 0.03f, 0.08f, 0.4f), 30);
             RectTransform frameRect = safeFrame.GetComponent<RectTransform>();
@@ -655,20 +657,77 @@ namespace Microverse.UI
             descriptionPanelRect.anchorMax = new Vector2(1f, 0f);
             descriptionPanelRect.pivot = new Vector2(0.5f, 0f);
             descriptionPanelRect.offsetMin = new Vector2(56f, 42f);
-            descriptionPanelRect.offsetMax = new Vector2(-56f, 172f);
+            descriptionPanelRect.offsetMax = new Vector2(-56f, 242f);
 
-            TextMeshProUGUI descriptionText = UiFactory.Text("ARDescription", descriptionPanel.transform, model.Description.Get(language), 24, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
-            descriptionText.enableAutoSizing = true;
-            descriptionText.fontSizeMax = 24;
-            descriptionText.fontSizeMin = 15;
-            UiFactory.Stretch(descriptionText.rectTransform, 28f, 18f);
+            // Add ScrollRect component to enable scrolling
+            ScrollRect scroll = descriptionPanel.AddComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+
+            // Create Viewport with RectMask2D for clipping text
+            GameObject viewport = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D));
+            viewport.transform.SetParent(descriptionPanel.transform, false);
+            RectTransform viewportRect = viewport.GetComponent<RectTransform>();
+            UiFactory.Stretch(viewportRect, 28f, 18f);
+
+            // Create Scrollbar for visual scrolling feedback
+            GameObject scrollbarGo = new GameObject("Scrollbar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Scrollbar));
+            scrollbarGo.transform.SetParent(descriptionPanel.transform, false);
+            RectTransform scrollbarRect = scrollbarGo.GetComponent<RectTransform>();
+            scrollbarRect.anchorMin = new Vector2(1f, 0f);
+            scrollbarRect.anchorMax = new Vector2(1f, 1f);
+            scrollbarRect.pivot = new Vector2(1f, 0.5f);
+            scrollbarRect.anchoredPosition = new Vector2(-12f, 0f);
+            scrollbarRect.sizeDelta = new Vector2(8f, -24f);
+
+            Image scrollbarBg = scrollbarGo.GetComponent<Image>();
+            scrollbarBg.sprite = RoundedSpriteFactory.RoundedRect(new Color(1f, 1f, 1f, 0.05f), 4);
+            scrollbarBg.type = Image.Type.Sliced;
+
+            GameObject slidingArea = new GameObject("SlidingArea", typeof(RectTransform));
+            slidingArea.transform.SetParent(scrollbarGo.transform, false);
+            UiFactory.Stretch(slidingArea.GetComponent<RectTransform>());
+
+            GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            handleGo.transform.SetParent(slidingArea.transform, false);
+            UiFactory.Stretch(handleGo.GetComponent<RectTransform>());
+
+            Image handleImage = handleGo.GetComponent<Image>();
+            handleImage.sprite = RoundedSpriteFactory.RoundedRect(MicroverseTheme.Cyan, 4);
+            handleImage.type = Image.Type.Sliced;
+
+            Scrollbar scrollbar = scrollbarGo.GetComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollbar.handleRect = handleGo.GetComponent<RectTransform>();
+
+            scroll.verticalScrollbar = scrollbar;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            scroll.verticalScrollbarSpacing = 6f;
+
+            // Create Description Text inside the Viewport
+            TextMeshProUGUI descriptionText = UiFactory.Text("ARDescription", viewport.transform, model.Description.Get(language), 28, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            RectTransform textRect = descriptionText.rectTransform;
+            textRect.anchorMin = new Vector2(0f, 1f);
+            textRect.anchorMax = new Vector2(1f, 1f);
+            textRect.pivot = new Vector2(0.5f, 1f);
+            textRect.anchoredPosition = Vector2.zero;
+            textRect.sizeDelta = new Vector2(0f, 0f);
+
+            // Add ContentSizeFitter to dynamically resize text rect based on content length
+            ContentSizeFitter fitter = descriptionText.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scroll.viewport = viewportRect;
+            scroll.content = textRect;
 
             TextMeshProUGUI cellLabel = UiFactory.Text("ARCellLabel", safeFrame.transform, model.Name.Get(language), 36, FontStyles.Bold, MicroverseTheme.Cyan, TextAlignmentOptions.Center);
             RectTransform labelRect = cellLabel.rectTransform;
             labelRect.anchorMin = new Vector2(0.5f, 0f);
             labelRect.anchorMax = new Vector2(0.5f, 0f);
             labelRect.pivot = new Vector2(0.5f, 0f);
-            labelRect.anchoredPosition = new Vector2(0f, 184f);
+            labelRect.anchoredPosition = new Vector2(0f, 254f);
             labelRect.sizeDelta = new Vector2(800f, 64f);
         }
 

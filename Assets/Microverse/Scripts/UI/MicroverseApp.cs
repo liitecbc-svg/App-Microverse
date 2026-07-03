@@ -140,61 +140,124 @@ namespace Microverse.UI
             UiFactory.Stretch(bg.rectTransform);
             bg.type = Image.Type.Simple;
 
-            // 2. Add App Logo (microverse-logo-temp)
+            Color themeBlue = new Color(0.18f, 0.32f, 0.65f); // Deep blue matching ULS style
+
+            // 2. Add Circular Menu Button (Top-Left)
+            GameObject menuBtnGo = new GameObject("MenuButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            menuBtnGo.transform.SetParent(startRoot.transform, false);
+            RectTransform menuRect = menuBtnGo.GetComponent<RectTransform>();
+            menuRect.anchorMin = new Vector2(0f, 1f);
+            menuRect.anchorMax = new Vector2(0f, 1f);
+            menuRect.pivot = new Vector2(0f, 1f);
+            menuRect.anchoredPosition = new Vector2(54f, -54f);
+            menuRect.sizeDelta = new Vector2(88f, 88f);
+
+            Image menuImg = menuBtnGo.GetComponent<Image>();
+            menuImg.sprite = RoundedSpriteFactory.RoundedRectBorder(themeBlue, Color.white, 3.5f, 44, 88, 88);
+
+            Button menuBtn = menuBtnGo.GetComponent<Button>();
+            menuBtn.onClick.AddListener(ShowSideMenu);
+
+            // Draw 3 horizontal lines (hamburger) inside the button
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject line = new GameObject($"Line_{i}", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                line.transform.SetParent(menuBtnGo.transform, false);
+                RectTransform lineRect = line.GetComponent<RectTransform>();
+                lineRect.anchorMin = new Vector2(0.5f, 0.5f);
+                lineRect.anchorMax = new Vector2(0.5f, 0.5f);
+                lineRect.pivot = new Vector2(0.5f, 0.5f);
+                lineRect.anchoredPosition = new Vector2(0f, 12f - (i * 12f));
+                lineRect.sizeDelta = new Vector2(36f, 5f);
+                line.GetComponent<Image>().color = themeBlue;
+            }
+
+            // 3. Add App Logo (overwritten with ULS/Chromosomes official icon)
             Sprite logoSprite = Resources.Load<Sprite>("AppLogo/microverse-logo-temp");
             if (logoSprite != null)
             {
                 Image logo = UiFactory.Image("AppLogo", startRoot.transform, logoSprite, Color.white);
                 RectTransform logoRect = logo.rectTransform;
-                logoRect.anchorMin = new Vector2(0.5f, 0.6f);
-                logoRect.anchorMax = new Vector2(0.5f, 0.6f);
+                logoRect.anchorMin = new Vector2(0.5f, 0.62f);
+                logoRect.anchorMax = new Vector2(0.5f, 0.62f);
                 logoRect.pivot = new Vector2(0.5f, 0.5f);
-                logoRect.anchoredPosition = new Vector2(0f, 0f);
-                logoRect.sizeDelta = new Vector2(400f, 400f);
+                logoRect.anchoredPosition = Vector2.zero;
+                logoRect.sizeDelta = new Vector2(280f, 280f);
             }
 
-            // 3. Add App Name
-            TextMeshProUGUI appNameText = UiFactory.Text("AppName", startRoot.transform, "MICROVERSE", 54, FontStyles.Bold, MicroverseTheme.Cyan, TextAlignmentOptions.Center);
+            // 4. Add App Name and Subtitle
+            string appNameStr = "MICROVERSE";
+            string subtitleStr = language == MicroverseLanguage.Spanish ? "EXPLORACIÓN BIOLÓGICA EN REALIDAD AUMENTADA" :
+                                 (language == MicroverseLanguage.Portuguese ? "EXPLORAÇÃO BIOLÓGICA EM REALIDADE AUMENTADA" :
+                                 "BIOLOGICAL EXPLORATION IN AUGMENTED REALITY");
+
+            TextMeshProUGUI appNameText = UiFactory.Text("AppName", startRoot.transform, appNameStr, 50, FontStyles.Bold, themeBlue, TextAlignmentOptions.Center);
             RectTransform appNameRect = appNameText.rectTransform;
-            appNameRect.anchorMin = new Vector2(0f, 0.42f);
-            appNameRect.anchorMax = new Vector2(1f, 0.42f);
+            appNameRect.anchorMin = new Vector2(0f, 0.44f);
+            appNameRect.anchorMax = new Vector2(1f, 0.44f);
             appNameRect.pivot = new Vector2(0.5f, 0.5f);
             appNameRect.anchoredPosition = Vector2.zero;
-            appNameRect.sizeDelta = new Vector2(0f, 80f);
+            appNameRect.sizeDelta = new Vector2(0f, 60f);
 
-            // 4. Center-Bottom Buttons (Comenzar & Instrucciones)
-            // Left button: Instrucciones
+            TextMeshProUGUI subtitleText = UiFactory.Text("AppSubtitle", startRoot.transform, subtitleStr, 20, FontStyles.Normal, new Color(0.42f, 0.46f, 0.56f), TextAlignmentOptions.Center);
+            RectTransform subRect = subtitleText.rectTransform;
+            subRect.anchorMin = new Vector2(0f, 0.38f);
+            subRect.anchorMax = new Vector2(1f, 0.38f);
+            subRect.pivot = new Vector2(0.5f, 0.5f);
+            subRect.anchoredPosition = Vector2.zero;
+            subRect.sizeDelta = new Vector2(0f, 40f);
+
+            // 5. Center-Bottom Pill-Shaped Buttons
             string instrLabel = language == MicroverseLanguage.Spanish ? "Instrucciones" :
                                 (language == MicroverseLanguage.Portuguese ? "Instruções" : "Instructions");
-            Button instrButton = UiFactory.Button("InstructionsButton", startRoot.transform, instrLabel, ShowInstructionsOverlay, MicroverseTheme.PanelLight, MicroverseTheme.Text, 24);
-            RectTransform instrRect = instrButton.GetComponent<RectTransform>();
-            instrRect.anchorMin = new Vector2(0.5f, 0.18f);
-            instrRect.anchorMax = new Vector2(0.5f, 0.18f);
+            string startLabel = language == MicroverseLanguage.Spanish ? "Comenzar" :
+                                (language == MicroverseLanguage.Portuguese ? "Começar" : "Start");
+
+            // Left Button: INSTRUCCIONES (White fill, blue border, blue text)
+            GameObject instrGo = new GameObject("InstructionsButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            instrGo.transform.SetParent(startRoot.transform, false);
+            RectTransform instrRect = instrGo.GetComponent<RectTransform>();
+            instrRect.anchorMin = new Vector2(0.5f, 0.22f);
+            instrRect.anchorMax = new Vector2(0.5f, 0.22f);
             instrRect.pivot = new Vector2(0.5f, 0.5f);
             instrRect.anchoredPosition = new Vector2(-190f, 0f);
             instrRect.sizeDelta = new Vector2(340f, 75f);
+            
+            instrGo.GetComponent<Image>().sprite = RoundedSpriteFactory.RoundedRectBorder(themeBlue, Color.white, 3.5f, 37, 340, 75);
+            Button instrBtn = instrGo.GetComponent<Button>();
+            instrBtn.onClick.AddListener(ShowInstructionsOverlay);
 
-            // Right button: Comenzar
-            string startLabel = language == MicroverseLanguage.Spanish ? "Comenzar" :
-                                (language == MicroverseLanguage.Portuguese ? "Começar" : "Start");
-            Button startBtn = UiFactory.Button("StartButton", startRoot.transform, startLabel, ShowHome, new Color(0.0f, 0.42f, 0.68f, 0.95f), MicroverseTheme.Text, 24);
-            RectTransform startBtnRect = startBtn.GetComponent<RectTransform>();
-            startBtnRect.anchorMin = new Vector2(0.5f, 0.18f);
-            startBtnRect.anchorMax = new Vector2(0.5f, 0.18f);
+            TextMeshProUGUI instrText = UiFactory.Text("Label", instrGo.transform, instrLabel.ToUpper(), 22, FontStyles.Bold, themeBlue, TextAlignmentOptions.Center);
+            UiFactory.ConfigureButtonLabel(instrText, 22);
+            UiFactory.Stretch(instrText.rectTransform, 1, 1);
+
+            // Right Button: COMENZAR (Solid magenta fill, white text)
+            GameObject startGo = new GameObject("StartButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            startGo.transform.SetParent(startRoot.transform, false);
+            RectTransform startBtnRect = startGo.GetComponent<RectTransform>();
+            startBtnRect.anchorMin = new Vector2(0.5f, 0.22f);
+            startBtnRect.anchorMax = new Vector2(0.5f, 0.22f);
             startBtnRect.pivot = new Vector2(0.5f, 0.5f);
             startBtnRect.anchoredPosition = new Vector2(190f, 0f);
             startBtnRect.sizeDelta = new Vector2(340f, 75f);
 
-            // 5. Menu Button (Top-Right) to open side panel
-            string menuLabel = language == MicroverseLanguage.Spanish ? "MENÚ" :
-                               (language == MicroverseLanguage.Portuguese ? "MENU" : "MENU");
-            Button menuButton = UiFactory.Button("MenuButton", startRoot.transform, menuLabel, ShowSideMenu, new Color(0.05f, 0.12f, 0.28f, 0.85f), MicroverseTheme.Cyan, 22);
-            RectTransform menuRect = menuButton.GetComponent<RectTransform>();
-            menuRect.anchorMin = new Vector2(1f, 1f);
-            menuRect.anchorMax = new Vector2(1f, 1f);
-            menuRect.pivot = new Vector2(1f, 1f);
-            menuRect.anchoredPosition = new Vector2(-38f, -38f);
-            menuRect.sizeDelta = new Vector2(160f, 75f);
+            Color magentaColor = new Color(0.82f, 0.06f, 0.35f);
+            startGo.GetComponent<Image>().sprite = RoundedSpriteFactory.RoundedRectBorder(magentaColor, magentaColor, 0f, 37, 340, 75);
+            Button startBtn = startGo.GetComponent<Button>();
+            startBtn.onClick.AddListener(ShowHome);
+
+            TextMeshProUGUI startText = UiFactory.Text("Label", startGo.transform, startLabel.ToUpper(), 22, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
+            UiFactory.ConfigureButtonLabel(startText, 22);
+            UiFactory.Stretch(startText.rectTransform, 1, 1);
+
+            // 6. Footer copyright text
+            TextMeshProUGUI footerText = UiFactory.Text("FooterText", startRoot.transform, "© UNIVERSIDAD DE LA SERENA", 18, FontStyles.Normal, new Color(0.45f, 0.50f, 0.60f), TextAlignmentOptions.Center);
+            RectTransform footerRect = footerText.rectTransform;
+            footerRect.anchorMin = new Vector2(0f, 0.08f);
+            footerRect.anchorMax = new Vector2(1f, 0.08f);
+            footerRect.pivot = new Vector2(0.5f, 0.5f);
+            footerRect.anchoredPosition = Vector2.zero;
+            footerRect.sizeDelta = new Vector2(0f, 40f);
         }
 
         private void ShowInstructionsOverlay()

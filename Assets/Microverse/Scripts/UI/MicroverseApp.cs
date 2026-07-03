@@ -736,9 +736,9 @@ namespace Microverse.UI
             titleRect.offsetMin = new Vector2(56f, -185f);
             titleRect.offsetMax = new Vector2(-56f, -105f);
 
-            AddCreditSection(root.transform, "DevelopersPanel", DevelopersLabel(), "Cristhian Montenegro\nBrandon Muñoz", new Vector2(0.08f, 0.61f), new Vector2(0.92f, 0.78f), MicroverseTheme.Cyan);
-            AddCreditSection(root.transform, "AcademicPanel", AcademicCollaborationLabel(), "Dra. Cassia Yano", new Vector2(0.08f, 0.42f), new Vector2(0.92f, 0.57f), new Color(0.54f, 0.82f, 1f));
-            AddCreditSection(root.transform, "InstitutionsPanel", InstitutionsLabel(), "ULS\nLIITEC", new Vector2(0.08f, 0.20f), new Vector2(0.92f, 0.38f), new Color(0.90f, 0.74f, 0.22f));
+            AddCreditSection(root.transform, "DevelopersPanel", GetUiText("credits.developers"), "Cristhian Montenegro\nBrandon Muñoz", new Vector2(0.08f, 0.61f), new Vector2(0.92f, 0.78f), MicroverseTheme.Cyan);
+            AddCreditSection(root.transform, "AcademicPanel", GetUiText("credits.academic_collaboration"), "Dra. Cassia Yano", new Vector2(0.08f, 0.42f), new Vector2(0.92f, 0.57f), new Color(0.54f, 0.82f, 1f));
+            AddCreditSection(root.transform, "InstitutionsPanel", GetUiText("credits.institutions"), "ULS\nLIITEC", new Vector2(0.08f, 0.20f), new Vector2(0.92f, 0.38f), new Color(0.90f, 0.74f, 0.22f));
 
             if (navigationBar != null && navigationBar.Root != null)
             {
@@ -820,17 +820,19 @@ namespace Microverse.UI
             TranslateLanguageIfNeeded(language);
         }
 
-        private void TranslateLanguageIfNeeded(MicroverseLanguage targetLanguage)
+        private void TranslateLanguageIfNeeded(MicroverseLanguage targetLanguage, Action onComplete = null, bool refreshAfterSuccess = true)
         {
             if (targetLanguage == SourceLanguage ||
                 translatedLanguages.Contains(targetLanguage) ||
                 pendingTranslationLanguages.Contains(targetLanguage))
             {
+                onComplete?.Invoke();
                 return;
             }
 
             if (translationService == null || !translationService.IsAutomaticTranslationAvailable)
             {
+                onComplete?.Invoke();
                 return;
             }
 
@@ -839,13 +841,6 @@ namespace Microverse.UI
             List<Action<string>> applyTranslatedText = new List<Action<string>>();
             string source = SourceLanguage.ToLanguageCode();
             string target = targetLanguage.ToLanguageCode();
-
-            foreach (string key in uiTextCatalog.Keys)
-            {
-                string uiText = uiTextCatalog.GetSource(key);
-                requests.Add(new TranslationRequest(uiText, source, target));
-                applyTranslatedText.Add(translated => uiTextCatalog.Set(targetLanguage, key, translated));
-            }
 
             foreach (BiologicalModel model in models)
             {
@@ -866,15 +861,18 @@ namespace Microverse.UI
 
                     pendingTranslationLanguages.Remove(targetLanguage);
                     translatedLanguages.Add(targetLanguage);
-                    if (language == targetLanguage)
+                    if (refreshAfterSuccess && language == targetLanguage)
                     {
                         RefreshCurrentScreen();
                     }
+
+                    onComplete?.Invoke();
                 },
                 error =>
                 {
                     pendingTranslationLanguages.Remove(targetLanguage);
                     Debug.LogWarning("Automatic translation unavailable. Keeping local text. " + error);
+                    onComplete?.Invoke();
                 });
         }
 
@@ -886,7 +884,24 @@ namespace Microverse.UI
             List<TranslationRequest> requests,
             List<Action<string>> applyTranslatedText)
         {
+            if (text == null)
+            {
+                return;
+            }
+
             string sourceText = text.GetSource(SourceLanguage);
+            if (string.IsNullOrWhiteSpace(sourceText))
+            {
+                return;
+            }
+
+            string currentTargetText = text.Get(targetLanguage);
+            if (!string.IsNullOrWhiteSpace(currentTargetText) &&
+                !string.Equals(currentTargetText, sourceText, StringComparison.Ordinal))
+            {
+                return;
+            }
+
             requests.Add(new TranslationRequest(sourceText, source, target));
             applyTranslatedText.Add(translated => text.Set(targetLanguage, translated));
         }
@@ -916,51 +931,6 @@ namespace Microverse.UI
         private string GetUiText(string key)
         {
             return uiTextCatalog.Get(key, language);
-        }
-
-        private string DevelopersLabel()
-        {
-            if (language == MicroverseLanguage.English)
-            {
-                return "Developers";
-            }
-
-            if (language == MicroverseLanguage.Portuguese)
-            {
-                return "Desenvolvedores";
-            }
-
-            return "Desarrolladores";
-        }
-
-        private string AcademicCollaborationLabel()
-        {
-            if (language == MicroverseLanguage.English)
-            {
-                return "Academic collaboration";
-            }
-
-            if (language == MicroverseLanguage.Portuguese)
-            {
-                return "Colaboracao academica";
-            }
-
-            return "Colaboracion academica";
-        }
-
-        private string InstitutionsLabel()
-        {
-            if (language == MicroverseLanguage.English)
-            {
-                return "Collaborating institutions";
-            }
-
-            if (language == MicroverseLanguage.Portuguese)
-            {
-                return "Instituicoes colaboradoras";
-            }
-
-            return "Instituciones colaboradoras";
         }
 
         private void ClearScreen()
@@ -1098,17 +1068,7 @@ namespace Microverse.UI
             backRect.anchoredPosition = new Vector2(38f, -38f);
             backRect.sizeDelta = new Vector2(75f, 75f);
 
-            string instruction = language == MicroverseLanguage.Spanish ? 
-                "Usa 1 dedo para rotar la célula\nUsa 2 dedos para cambiar el tamaño" : 
-                (language == MicroverseLanguage.Portuguese ?
-                "Use 1 dedo para rotar a célula\nUse 2 dedos para redimensionar" :
-                "Use 1 finger to rotate the cell\nUse 2 fingers to resize");
-            
-            instruction = language == MicroverseLanguage.Spanish ?
-                "Usa 1 dedo para rotar el modelo\nUsa 2 dedos para cambiar el tamano" :
-                (language == MicroverseLanguage.Portuguese ?
-                "Use 1 dedo para rotar o modelo\nUse 2 dedos para redimensionar" :
-                "Use 1 finger to rotate the model\nUse 2 fingers to resize");
+            string instruction = GetUiText("ar.instruction_model");
 
             GameObject helpPanel = UiFactory.Panel("ARHelpPanel", safeFrame.transform, new Color(0.02f, 0.06f, 0.14f, 0.92f), 20);
             RectTransform helpPanelRect = helpPanel.GetComponent<RectTransform>();

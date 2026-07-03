@@ -14,6 +14,7 @@ namespace Microverse.UI
         private static Sprite emptyStarSprite;
         private static Sprite filledStarSprite;
         private readonly MicroverseLanguage language;
+        private readonly Func<string, string> getText;
         private Button downloadButton;
         private TextMeshProUGUI downloadProgressText;
         private RectTransform downloadProgressFillRect;
@@ -31,9 +32,12 @@ namespace Microverse.UI
             bool showDownloadButton = false,
             Action<BiologicalModel> onDownload = null,
             bool isDownloading = false,
-            float downloadProgress = 0f)
+            float downloadProgress = 0f,
+            float cardWidth = 300f,
+            float cardHeight = 350f)
         {
             this.language = language;
+            this.getText = getText;
             Root = UiFactory.Panel("ModelCard-" + model.Id, parent, new Color(0.02f, 0.06f, 0.14f, 0.96f), 24);
             Image frame = Root.GetComponent<Image>();
             frame.color = MicroverseTheme.Panel;
@@ -50,11 +54,11 @@ namespace Microverse.UI
             });
 
             RectTransform rect = Root.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(294f, 324f);
+            rect.sizeDelta = new Vector2(cardWidth, cardHeight);
 
             GameObject visualWell = UiFactory.Panel("VisualWell", Root.transform, new Color(0.01f, 0.04f, 0.10f, 0.94f), 20);
             RectTransform wellRect = visualWell.GetComponent<RectTransform>();
-            wellRect.anchorMin = new Vector2(0f, 0.36f);
+            wellRect.anchorMin = new Vector2(0f, 0.43f);
             wellRect.anchorMax = new Vector2(1f, 1f);
             wellRect.offsetMin = new Vector2(8f, 6f);
             wellRect.offsetMax = new Vector2(-8f, -8f);
@@ -114,25 +118,27 @@ namespace Microverse.UI
             title.enableAutoSizing = true;
             title.fontSizeMax = 23;
             title.fontSizeMin = 14;
+            title.maxVisibleLines = 2;
             RectTransform titleRect = title.rectTransform;
             titleRect.anchorMin = new Vector2(0f, 0f);
             titleRect.anchorMax = new Vector2(1f, 0f);
-            titleRect.offsetMin = showDownloadButton ? new Vector2(22f, 88f) : new Vector2(22f, 64f);
-            titleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 132f) : new Vector2(-22f, 112f);
+            titleRect.offsetMin = showDownloadButton ? new Vector2(22f, 98f) : new Vector2(22f, 78f);
+            titleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 148f) : new Vector2(-22f, 132f);
 
             TextMeshProUGUI subtitle = UiFactory.Text("Subtitle", Root.transform, model.Subtitle.Get(language), 18, FontStyles.Normal, MicroverseTheme.MutedText);
             subtitle.enableAutoSizing = true;
             subtitle.fontSizeMax = 18;
             subtitle.fontSizeMin = 12;
+            subtitle.maxVisibleLines = 2;
             RectTransform subtitleRect = subtitle.rectTransform;
             subtitleRect.anchorMin = new Vector2(0f, 0f);
             subtitleRect.anchorMax = new Vector2(1f, 0f);
-            subtitleRect.offsetMin = showDownloadButton ? new Vector2(22f, 60f) : new Vector2(22f, 34f);
-            subtitleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 88f) : new Vector2(-22f, 66f);
+            subtitleRect.offsetMin = showDownloadButton ? new Vector2(22f, 58f) : new Vector2(22f, 36f);
+            subtitleRect.offsetMax = showDownloadButton ? new Vector2(-22f, 96f) : new Vector2(-22f, 76f);
 
             if (showDownloadButton)
             {
-                string downloadLabel = isDownloading ? DownloadProgressLabel(language, downloadProgress) : getText("model.download");
+                string downloadLabel = isDownloading ? DownloadProgressLabel(downloadProgress) : getText("model.download");
                 Button download = UiFactory.Button("DownloadModel", Root.transform, downloadLabel, () =>
                 {
                     if (!isDownloading)
@@ -214,7 +220,7 @@ namespace Microverse.UI
 
             if (downloadProgressText != null)
             {
-                downloadProgressText.text = DownloadProgressLabel(language, progress);
+                downloadProgressText.text = DownloadProgressLabel(progress);
             }
         }
 
@@ -236,20 +242,11 @@ namespace Microverse.UI
             return fillRect;
         }
 
-        private static string DownloadProgressLabel(MicroverseLanguage language, float progress)
+        private string DownloadProgressLabel(float progress)
         {
             int percentage = Mathf.RoundToInt(Mathf.Clamp01(progress) * 100f);
-            if (language == MicroverseLanguage.English)
-            {
-                return "Downloading " + percentage + "%";
-            }
-
-            if (language == MicroverseLanguage.Portuguese)
-            {
-                return "Baixando " + percentage + "%";
-            }
-
-            return "Descargando " + percentage + "%";
+            string format = getText != null ? getText("model.downloading") : "Downloading {0}%";
+            return format.Replace("{0}", percentage.ToString());
         }
 
         private static Button CreateFavoriteButton(Transform parent, bool active)
@@ -368,8 +365,7 @@ namespace Microverse.UI
             dialogRect.sizeDelta = new Vector2(600f, 380f);
 
             // 3. Title Text
-            string titleStr = language == MicroverseLanguage.Spanish ? "¿Eliminar modelo?" : 
-                              (language == MicroverseLanguage.Portuguese ? "Excluir modelo?" : "Delete model?");
+            string titleStr = getText("dialog.delete.title");
             TextMeshProUGUI titleText = UiFactory.Text("DialogTitle", dialogPanel.transform, titleStr, 28, FontStyles.Bold, MicroverseTheme.Cyan, TextAlignmentOptions.Center);
             RectTransform titleRect = titleText.rectTransform;
             titleRect.anchorMin = new Vector2(0f, 1f);
@@ -379,9 +375,7 @@ namespace Microverse.UI
             titleRect.offsetMax = new Vector2(-24f, -24f);
 
             // 4. Description Text
-            string descStr = language == MicroverseLanguage.Spanish ? $"¿Estás seguro de que deseas eliminar '{model.Name.Get(language)}' de tu dispositivo? Deberás descargarlo nuevamente para verlo sin conexión." :
-                             (language == MicroverseLanguage.Portuguese ? $"Tem certeza de que deseja excluir '{model.Name.Get(language)}' do seu dispositivo? Você precisará baixá-lo novamente para vê-lo off-line." :
-                             $"Are you sure you want to delete '{model.Name.Get(language)}' from your device? You will need to download it again to view it offline.");
+            string descStr = string.Format(getText("dialog.delete.body"), model.Name.Get(language));
             
             TextMeshProUGUI desc = UiFactory.Text("DialogDesc", dialogPanel.transform, descStr, 20, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
             RectTransform descRect = desc.rectTransform;
@@ -392,7 +386,7 @@ namespace Microverse.UI
             descRect.offsetMax = new Vector2(-34f, -90f);
 
             // 5. Cancel ("No") Button
-            string noStr = language == MicroverseLanguage.Spanish ? "No" : "No";
+            string noStr = getText("dialog.delete.cancel");
             Button cancelButton = UiFactory.Button("CancelButton", dialogPanel.transform, noStr, () => {
                 UnityEngine.Object.Destroy(modalBg);
             }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
@@ -403,9 +397,8 @@ namespace Microverse.UI
             cancelRect.offsetMin = new Vector2(34f, 28f);
             cancelRect.offsetMax = new Vector2(-12f, 92f);
 
-            // 6. Confirm ("Sí") Button
-            string yesStr = language == MicroverseLanguage.Spanish ? "Sí" : 
-                            (language == MicroverseLanguage.Portuguese ? "Sim" : "Yes");
+            // 6. Confirm Button
+            string yesStr = getText("dialog.delete.confirm");
             Button confirmButton = UiFactory.Button("ConfirmButton", dialogPanel.transform, yesStr, () => {
                 onDeleteConfirmed?.Invoke();
                 UnityEngine.Object.Destroy(modalBg);

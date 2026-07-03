@@ -11,8 +11,8 @@ namespace Microverse.Services
             new BiologicalModel(
                 "cromossomo",
                 new LocalizedText("Cromosoma", "Chromosome", "Cromossomo"),
-                new LocalizedText("Estructura genetica", "Genetic Structure", "Estrutura genetica"),
-                new LocalizedText("Tipos de celulas", "Types of Cells", "Tipos de celulas"),
+                new LocalizedText("Demo", "Demo", "Demo"),
+                new LocalizedText("Demo", "Demo", "Demo"),
                 new LocalizedText(
                     "Los cromosomas son estructuras de ADN y proteinas que contienen la informacion genetica y ayudan a distribuirla durante la division celular.",
                     "Chromosomes are DNA and protein structures that contain genetic information and help distribute it during cell division.",
@@ -24,6 +24,23 @@ namespace Microverse.Services
                 false,
                 "resource:Models/Cromossomo",
                 "resource:ModelPreviews/cromossomo-preview",
+                true),
+            new BiologicalModel(
+                "celula-animal",
+                new LocalizedText("Celula Animal", "Animal Cell", "Celula Animal"),
+                new LocalizedText("Demo", "Demo", "Demo"),
+                new LocalizedText("Demo", "Demo", "Demo"),
+                new LocalizedText(
+                    "La celula animal es una unidad eucariota con organelos especializados, membrana plasmatica y nucleo definido.",
+                    "The animal cell is a eukaryotic unit with specialized organelles, a plasma membrane, and a defined nucleus.",
+                    "A celula animal e uma unidade eucariotica com organelos especializados, membrana plasmatica e nucleo definido."),
+                "Animal cell",
+                new Color(0.25f, 0.68f, 0.80f),
+                new Color(0.86f, 0.36f, 0.72f),
+                23,
+                false,
+                "resource:Models/685dc3ac-df6a-4771-ab12-cecb8448d745-celula-animal",
+                "resource:ModelPreviews/celula-animal-preview",
                 true)
         };
 

@@ -337,13 +337,14 @@ namespace Microverse.Services
                             }
                         }
 
-                        // Instanciate BiologicalModel (client translation handles translating these from Spanish to other languages)
+                        // The database schema uses Spanish names, but its content is stored in English.
+                        // Client-side ML translation fills the Spanish and Portuguese values when needed.
                         BiologicalModel bioModel = new BiologicalModel(
                             model.id.ToString(),
-                            new LocalizedText(model.nombre, model.nombre, model.nombre),
-                            new LocalizedText(subtitle, subtitle, subtitle),
-                            new LocalizedText(categoryName, categoryName, categoryName),
-                            new LocalizedText(model.descripcion ?? "", model.descripcion ?? "", model.descripcion ?? ""),
+                            LocalizedText.FromEnglish(model.nombre),
+                            LocalizedText.FromEnglish(subtitle),
+                            LocalizedText.FromEnglish(categoryName),
+                            LocalizedText.FromEnglish(model.descripcion ?? ""),
                             scientificName,
                             primaryColor,
                             secondaryColor,

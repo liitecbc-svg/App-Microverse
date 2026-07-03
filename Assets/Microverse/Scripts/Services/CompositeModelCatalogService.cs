@@ -143,6 +143,11 @@ namespace Microverse.Services
                 int existingIndex = IndexOfModel(model.Id);
                 if (existingIndex >= 0)
                 {
+                    if (cachedModels[existingIndex] != null && cachedModels[existingIndex].IsBundledModel && !model.IsBundledModel)
+                    {
+                        continue;
+                    }
+
                     cachedModels[existingIndex] = model;
                     continue;
                 }

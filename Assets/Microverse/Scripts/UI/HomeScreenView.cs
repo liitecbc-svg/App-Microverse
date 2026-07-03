@@ -11,7 +11,17 @@ namespace Microverse.UI
 {
     public class HomeScreenView
     {
-        private const int InlineCategoryLimit = 3;
+        private const float FilterRowWidth = 972f;
+        private const float FilterSpacing = 12f;
+        private const float FilterMinWidth = 132f;
+        private const float FilterMaxWidth = 226f;
+        private const float FilterMoreWidth = 142f;
+        private const float FilterRowSafetyInset = 34f;
+        private const int PreferredCatalogColumns = 3;
+        private const float CatalogCardMaxWidth = 300f;
+        private const float CatalogCardMinWidth = 260f;
+        private const float CatalogCardAspect = 350f / 300f;
+        private static readonly Vector2 CatalogGridSpacing = new Vector2(24f, 24f);
 
         private enum CatalogMode
         {
@@ -23,12 +33,13 @@ namespace Microverse.UI
         public GameObject Root { get; private set; }
 
         private readonly IReadOnlyList<BiologicalModel> models;
-        private readonly IReadOnlyList<string> categories;
         private readonly MicroverseLanguage language;
         private readonly Action<BiologicalModel> onOpenModel;
         private readonly Action onCycleLanguage;
         private readonly Func<string, string> getText;
         private readonly Transform gridContent;
+        private GridLayoutGroup catalogGrid;
+        private RectTransform catalogViewportRect;
         private readonly Dictionary<string, Image> filterImages = new Dictionary<string, Image>();
         private readonly Dictionary<string, TextMeshProUGUI> filterLabels = new Dictionary<string, TextMeshProUGUI>();
         private readonly Dictionary<string, Image> featureImages = new Dictionary<string, Image>();
@@ -48,7 +59,6 @@ namespace Microverse.UI
         public HomeScreenView(Transform parent, IReadOnlyList<BiologicalModel> models, IReadOnlyList<string> categories, MicroverseLanguage language, Action<BiologicalModel> onOpenModel, Action onCycleLanguage, Func<string, string> getText)
         {
             this.models = models;
-            this.categories = categories;
             this.language = language;
             this.onOpenModel = onOpenModel;
             this.onCycleLanguage = onCycleLanguage;
@@ -94,7 +104,7 @@ namespace Microverse.UI
             RectTransform rect = row.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(1f, 1f);
-            rect.offsetMin = new Vector2(54f, -375f);
+            rect.offsetMin = new Vector2(54f, -389f);
             rect.offsetMax = new Vector2(-54f, -297f);
 
             HorizontalLayoutGroup layout = row.AddComponent<HorizontalLayoutGroup>();
@@ -133,23 +143,37 @@ namespace Microverse.UI
             filtersRect.offsetMax = new Vector2(-54f, -480f);
 
             HorizontalLayoutGroup layout = filters.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 12;
+            layout.spacing = FilterSpacing;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
+            layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = true;
 
-            AddFilter(filters.transform, getText("home.filter.all"), string.Empty);
-            if (categories != null)
+            float availableFilterWidth = AvailableFilterRowWidth(filtersRect);
+            float usedWidth = AddFilter(filters.transform, getText("home.filter.all"), string.Empty);
+            int hiddenCategoryCount = 0;
+            List<CategoryFilterOption> categoryOptions = BuildCategoryFilterOptions();
+            if (categoryOptions.Count > 0)
             {
-                int inlineCount = Mathf.Min(categories.Count, InlineCategoryLimit);
-                for (int i = 0; i < inlineCount; i++)
+                for (int i = 0; i < categoryOptions.Count; i++)
                 {
-                    string cat = categories[i];
-                    AddFilter(filters.transform, cat, cat.ToLowerInvariant());
+                    CategoryFilterOption option = categoryOptions[i];
+                    string label = option.Label;
+                    float width = PreferredFilterWidth(label);
+                    bool hasMoreAfterThis = i < categoryOptions.Count - 1;
+                    float reserveForMore = hiddenCategoryCount > 0 || hasMoreAfterThis ? FilterSpacing + FilterMoreWidth : 0f;
+                    float spacing = FilterSpacing;
+
+                    if (!CanShowInlineFilter(label) || usedWidth + spacing + width + reserveForMore > availableFilterWidth)
+                    {
+                        hiddenCategoryCount++;
+                        continue;
+                    }
+
+                    usedWidth += spacing + AddFilter(filters.transform, label, option.Value, width);
                 }
 
-                if (categories.Count > InlineCategoryLimit)
+                if (hiddenCategoryCount > 0)
                 {
                     AddMoreFilter(filters.transform);
                 }
@@ -171,7 +195,8 @@ namespace Microverse.UI
 
             GameObject mask = new GameObject("Mask", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Mask));
             mask.transform.SetParent(viewport.transform, false);
-            UiFactory.Stretch(mask.GetComponent<RectTransform>());
+            catalogViewportRect = mask.GetComponent<RectTransform>();
+            UiFactory.Stretch(catalogViewportRect);
             Image maskImage = mask.GetComponent<Image>();
             maskImage.color = new Color(1f, 1f, 1f, 0.02f);
             mask.GetComponent<Mask>().showMaskGraphic = false;
@@ -185,17 +210,17 @@ namespace Microverse.UI
             contentRect.anchoredPosition = Vector2.zero;
             contentRect.sizeDelta = new Vector2(0f, 1000f);
 
-            GridLayoutGroup grid = content.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(294f, 324f);
-            grid.spacing = new Vector2(24f, 24f);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 3;
-            grid.childAlignment = TextAnchor.UpperCenter;
+            catalogGrid = content.AddComponent<GridLayoutGroup>();
+            catalogGrid.cellSize = new Vector2(CatalogCardMaxWidth, CatalogCardMaxWidth * CatalogCardAspect);
+            catalogGrid.spacing = CatalogGridSpacing;
+            catalogGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            catalogGrid.constraintCount = PreferredCatalogColumns;
+            catalogGrid.childAlignment = TextAnchor.UpperCenter;
 
             ContentSizeFitter fitter = content.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            scroll.viewport = mask.GetComponent<RectTransform>();
+            scroll.viewport = catalogViewportRect;
             scroll.content = contentRect;
 
             emptyStateText = UiFactory.Text("EmptyState", Root.transform, EmptyStateText(), 22, FontStyles.Bold, MicroverseTheme.MutedText, TextAlignmentOptions.Center);
@@ -208,8 +233,53 @@ namespace Microverse.UI
             return content.transform;
         }
 
+        private Vector2 ApplyResponsiveCatalogGrid()
+        {
+            if (catalogGrid == null)
+            {
+                return new Vector2(CatalogCardMaxWidth, CatalogCardMaxWidth * CatalogCardAspect);
+            }
+
+            Canvas.ForceUpdateCanvases();
+
+            float availableWidth = catalogViewportRect != null ? catalogViewportRect.rect.width : 0f;
+            if (availableWidth <= 1f)
+            {
+                RectTransform rootRect = Root != null ? Root.GetComponent<RectTransform>() : null;
+                availableWidth = rootRect != null ? rootRect.rect.width - 108f : FilterRowWidth;
+            }
+
+            if (availableWidth <= 1f)
+            {
+                availableWidth = FilterRowWidth;
+            }
+
+            int columns = PreferredCatalogColumns;
+            while (columns > 1)
+            {
+                float candidateWidth = (availableWidth - CatalogGridSpacing.x * (columns - 1)) / columns;
+                if (candidateWidth >= CatalogCardMinWidth)
+                {
+                    break;
+                }
+
+                columns--;
+            }
+
+            float cardWidth = (availableWidth - CatalogGridSpacing.x * (columns - 1)) / columns;
+            cardWidth = Mathf.Clamp(cardWidth, CatalogCardMinWidth, CatalogCardMaxWidth);
+            float cardHeight = Mathf.Round(cardWidth * CatalogCardAspect);
+
+            catalogGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            catalogGrid.constraintCount = columns;
+            catalogGrid.spacing = CatalogGridSpacing;
+            catalogGrid.cellSize = new Vector2(cardWidth, cardHeight);
+            return catalogGrid.cellSize;
+        }
+
         private void RefreshGrid()
         {
+            Vector2 cardSize = ApplyResponsiveCatalogGrid();
             for (int i = gridContent.childCount - 1; i >= 0; i--)
             {
                 UnityEngine.Object.Destroy(gridContent.GetChild(i).gameObject);
@@ -227,7 +297,7 @@ namespace Microverse.UI
                 bool openable = !isDownloading && (available || (catalogMode == CatalogMode.Favorites && canDownload));
                 Action<BiologicalModel> openAction = available ? onOpenModel : DownloadModelThenOpen;
                 float progress = DownloadProgress(model);
-                ModelCardView card = new ModelCardView(gridContent, model, language, openAction, getText, RefreshGrid, openable, showDownloadControl, canDownload ? DownloadModel : null, isDownloading, progress);
+                ModelCardView card = new ModelCardView(gridContent, model, language, openAction, getText, RefreshGrid, openable, showDownloadControl, canDownload ? DownloadModel : null, isDownloading, progress, cardSize.x, cardSize.y);
                 if (!string.IsNullOrWhiteSpace(model.Id))
                 {
                     modelCardsById[model.Id] = card;
@@ -331,8 +401,9 @@ namespace Microverse.UI
             TextMeshProUGUI titleText = UiFactory.Text("Title", item.transform, title, 25, FontStyles.Bold, MicroverseTheme.Text);
             titleText.enableAutoSizing = true;
             titleText.fontSizeMax = 27;
-            titleText.fontSizeMin = 16;
-            titleText.enableWordWrapping = false;
+            titleText.fontSizeMin = 13;
+            titleText.enableWordWrapping = true;
+            titleText.maxVisibleLines = 2;
             titleText.alignment = TextAlignmentOptions.Center;
             featureImages[key] = item.GetComponent<Image>();
             featureLabels[key] = titleText;
@@ -483,8 +554,9 @@ namespace Microverse.UI
             bool openable = !isDownloading && (available || (catalogMode == CatalogMode.Favorites && canDownload));
             Action<BiologicalModel> openAction = available ? onOpenModel : DownloadModelThenOpen;
             float progress = DownloadProgress(model);
+            Vector2 cardSize = catalogGrid != null ? catalogGrid.cellSize : new Vector2(CatalogCardMaxWidth, CatalogCardMaxWidth * CatalogCardAspect);
 
-            ModelCardView newCard = new ModelCardView(gridContent, model, language, openAction, getText, RefreshGrid, openable, showDownloadControl, canDownload ? DownloadModel : null, isDownloading, progress);
+            ModelCardView newCard = new ModelCardView(gridContent, model, language, openAction, getText, RefreshGrid, openable, showDownloadControl, canDownload ? DownloadModel : null, isDownloading, progress, cardSize.x, cardSize.y);
             newCard.Root.transform.SetSiblingIndex(siblingIndex);
             modelCardsById[model.Id] = newCard;
         }
@@ -500,7 +572,12 @@ namespace Microverse.UI
             emptyStateText.gameObject.SetActive(gridContent.childCount == 0);
         }
 
-        private void AddFilter(Transform parent, string label, string value)
+        private float AddFilter(Transform parent, string label, string value)
+        {
+            return AddFilter(parent, label, value, PreferredFilterWidth(label));
+        }
+
+        private float AddFilter(Transform parent, string label, string value, float width)
         {
             Button button = UiFactory.Button("Filter-" + label, parent, label, () =>
             {
@@ -511,17 +588,46 @@ namespace Microverse.UI
 
             filterImages[value] = button.GetComponent<Image>();
             TextMeshProUGUI labelText = button.GetComponentInChildren<TextMeshProUGUI>();
-            UiFactory.ConfigureButtonLabel(labelText, 16, 10);
+            UiFactory.ConfigureButtonLabel(labelText, 16, 12);
+            labelText.overflowMode = TextOverflowModes.Overflow;
             filterLabels[value] = labelText;
             inlineFilterValues.Add(value);
+            LayoutElement layout = button.gameObject.AddComponent<LayoutElement>();
+            layout.minWidth = width;
+            layout.preferredWidth = width;
+            layout.flexibleWidth = 0f;
+            return width;
         }
 
         private void AddMoreFilter(Transform parent)
         {
-            Button button = UiFactory.Button("Filter-More", parent, MoreLabel(), ShowCategoryPicker, new Color(0.03f, 0.08f, 0.17f, 0.88f), MicroverseTheme.Text, 16);
+            Button button = UiFactory.Button("Filter-More", parent, getText("home.filter.more"), ShowCategoryPicker, new Color(0.03f, 0.08f, 0.17f, 0.88f), MicroverseTheme.Text, 16);
             moreFilterImage = button.GetComponent<Image>();
             moreFilterLabel = button.GetComponentInChildren<TextMeshProUGUI>();
             UiFactory.ConfigureButtonLabel(moreFilterLabel, 16, 10);
+            LayoutElement layout = button.gameObject.AddComponent<LayoutElement>();
+            layout.minWidth = FilterMoreWidth;
+            layout.preferredWidth = FilterMoreWidth;
+            layout.flexibleWidth = 0f;
+        }
+
+        private float AvailableFilterRowWidth(RectTransform filtersRect)
+        {
+            Canvas.ForceUpdateCanvases();
+
+            float width = filtersRect != null ? filtersRect.rect.width : 0f;
+            if (width <= 1f)
+            {
+                RectTransform rootRect = Root != null ? Root.GetComponent<RectTransform>() : null;
+                width = rootRect != null ? rootRect.rect.width - 108f : FilterRowWidth;
+            }
+
+            if (width <= 1f)
+            {
+                width = FilterRowWidth;
+            }
+
+            return Mathf.Max(FilterMinWidth + FilterSpacing + FilterMoreWidth, width - FilterRowSafetyInset);
         }
 
         private void RefreshFilterSelection()
@@ -543,7 +649,7 @@ namespace Microverse.UI
                 bool active = !string.IsNullOrWhiteSpace(categoryFilter) && !inlineFilterValues.Contains(categoryFilter);
                 moreFilterImage.color = active ? new Color(0.0f, 0.24f, 0.48f, 0.95f) : new Color(0.03f, 0.08f, 0.17f, 0.88f);
                 moreFilterLabel.color = active ? MicroverseTheme.Cyan : MicroverseTheme.Text;
-                moreFilterLabel.text = active ? SelectedCategoryLabel() : MoreLabel();
+                moreFilterLabel.text = active ? SelectedCategoryLabel() : getText("home.filter.more");
                 UiFactory.ConfigureButtonLabel(moreFilterLabel, 16, 10);
             }
         }
@@ -572,7 +678,7 @@ namespace Microverse.UI
             titleRect.offsetMin = new Vector2(34f, -74f);
             titleRect.offsetMax = new Vector2(-170f, -24f);
 
-            Button close = UiFactory.Button("Close", panel.transform, CloseLabel(), CloseCategoryPicker, MicroverseTheme.PanelLight, MicroverseTheme.Text, 16);
+            Button close = UiFactory.Button("Close", panel.transform, getText("common.close"), CloseCategoryPicker, MicroverseTheme.PanelLight, MicroverseTheme.Text, 16);
             RectTransform closeRect = close.GetComponent<RectTransform>();
             closeRect.anchorMin = new Vector2(1f, 1f);
             closeRect.anchorMax = new Vector2(1f, 1f);
@@ -617,11 +723,12 @@ namespace Microverse.UI
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             AddPickerRow(content.transform, getText("home.filter.all"), string.Empty);
-            if (categories != null)
+            List<CategoryFilterOption> categoryOptions = BuildCategoryFilterOptions();
+            if (categoryOptions.Count > 0)
             {
-                foreach (string cat in categories)
+                foreach (CategoryFilterOption option in categoryOptions)
                 {
-                    AddPickerRow(content.transform, cat, cat.ToLowerInvariant());
+                    AddPickerRow(content.transform, option.Label, option.Value);
                 }
             }
 
@@ -640,11 +747,15 @@ namespace Microverse.UI
                 RefreshGrid();
             }, active ? new Color(0.0f, 0.24f, 0.48f, 0.95f) : MicroverseTheme.PanelLight, active ? MicroverseTheme.Cyan : MicroverseTheme.Text, 18);
 
+            TextMeshProUGUI labelText = button.GetComponentInChildren<TextMeshProUGUI>();
+            UiFactory.ConfigureButtonLabel(labelText, 18, 12, true);
+            labelText.overflowMode = TextOverflowModes.Overflow;
+
             RectTransform rect = button.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(0f, 54f);
+            rect.sizeDelta = new Vector2(0f, 68f);
 
             LayoutElement layout = button.gameObject.AddComponent<LayoutElement>();
-            layout.preferredHeight = 54f;
+            layout.preferredHeight = 68f;
         }
 
         private void CloseCategoryPicker()
@@ -658,45 +769,96 @@ namespace Microverse.UI
             categoryPickerOverlay = null;
         }
 
-        private string MoreLabel()
-        {
-            return language == MicroverseLanguage.English ? "More" : "Mas";
-        }
-
-        private string CloseLabel()
-        {
-            return language == MicroverseLanguage.English ? "Close" : "Cerrar";
-        }
-
         private string SelectedCategoryLabel()
         {
-            if (categories != null)
+            List<CategoryFilterOption> categoryOptions = BuildCategoryFilterOptions();
+            foreach (CategoryFilterOption option in categoryOptions)
             {
-                foreach (string cat in categories)
+                if (option.Value == categoryFilter)
                 {
-                    if (cat.ToLowerInvariant() == categoryFilter)
-                    {
-                        return cat;
-                    }
+                    return option.Label;
                 }
             }
 
-            return MoreLabel();
+            return getText("home.filter.more");
         }
 
         private string EmptyStateText()
         {
             if (catalogMode == CatalogMode.Favorites)
             {
-                return language == MicroverseLanguage.English ? "No favorite models yet" : "Aun no hay modelos favoritos";
+                return getText("home.empty.favorites");
             }
 
             if (catalogMode == CatalogMode.Library)
             {
-                return language == MicroverseLanguage.English ? "No new models to download" : "No hay modelos nuevos para descargar";
+                return getText("home.empty.library");
             }
 
-            return language == MicroverseLanguage.English ? "No local AR models available" : "No hay modelos locales para RA";
+            return getText("home.empty.ar");
+        }
+
+        private List<CategoryFilterOption> BuildCategoryFilterOptions()
+        {
+            List<CategoryFilterOption> options = new List<CategoryFilterOption>();
+            HashSet<string> knownValues = new HashSet<string>();
+            if (models == null)
+            {
+                return options;
+            }
+
+            foreach (BiologicalModel model in models.Where(MatchesCatalogMode))
+            {
+                if (model == null || model.Category == null)
+                {
+                    continue;
+                }
+
+                string value = CategoryFilterValue(model.Category);
+                if (string.IsNullOrWhiteSpace(value) || knownValues.Contains(value))
+                {
+                    continue;
+                }
+
+                knownValues.Add(value);
+                options.Add(new CategoryFilterOption(value, model.Category.Get(language)));
+            }
+
+            return options;
+        }
+
+        private string CategoryFilterValue(LocalizedText category)
+        {
+            string value = category.Get(MicroverseLanguage.English);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                value = category.Get(MicroverseLanguage.Spanish);
+            }
+
+            return string.IsNullOrWhiteSpace(value) ? string.Empty : value.ToLowerInvariant();
+        }
+
+        private float PreferredFilterWidth(string label)
+        {
+            int length = string.IsNullOrWhiteSpace(label) ? 0 : label.Trim().Length;
+            return Mathf.Clamp(80f + length * 8.5f, FilterMinWidth, FilterMaxWidth);
+        }
+
+        private bool CanShowInlineFilter(string label)
+        {
+            return string.IsNullOrWhiteSpace(label) || label.Trim().Length <= 17;
+        }
+
+        private readonly struct CategoryFilterOption
+        {
+            public readonly string Value;
+            public readonly string Label;
+
+            public CategoryFilterOption(string value, string label)
+            {
+                Value = value;
+                Label = label;
+            }
         }
 
 

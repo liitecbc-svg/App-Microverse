@@ -16,7 +16,7 @@ namespace Microverse.Data
 
         public static LocalizedText FromEnglish(string english)
         {
-            return new LocalizedText(string.Empty, english, string.Empty);
+            return new LocalizedText(string.Empty, english ?? string.Empty, string.Empty);
         }
 
         public string Get(MicroverseLanguage language)

@@ -365,8 +365,7 @@ namespace Microverse.UI
             dialogRect.sizeDelta = new Vector2(600f, 380f);
 
             // 3. Title Text
-            string titleStr = language == MicroverseLanguage.Spanish ? "¿Eliminar modelo?" : 
-                              (language == MicroverseLanguage.Portuguese ? "Excluir modelo?" : "Delete model?");
+            string titleStr = getText("dialog.delete.title");
             TextMeshProUGUI titleText = UiFactory.Text("DialogTitle", dialogPanel.transform, titleStr, 28, FontStyles.Bold, MicroverseTheme.Cyan, TextAlignmentOptions.Center);
             RectTransform titleRect = titleText.rectTransform;
             titleRect.anchorMin = new Vector2(0f, 1f);
@@ -376,9 +375,7 @@ namespace Microverse.UI
             titleRect.offsetMax = new Vector2(-24f, -24f);
 
             // 4. Description Text
-            string descStr = language == MicroverseLanguage.Spanish ? $"¿Estás seguro de que deseas eliminar '{model.Name.Get(language)}' de tu dispositivo? Deberás descargarlo nuevamente para verlo sin conexión." :
-                             (language == MicroverseLanguage.Portuguese ? $"Tem certeza de que deseja excluir '{model.Name.Get(language)}' do seu dispositivo? Você precisará baixá-lo novamente para vê-lo off-line." :
-                             $"Are you sure you want to delete '{model.Name.Get(language)}' from your device? You will need to download it again to view it offline.");
+            string descStr = string.Format(getText("dialog.delete.body"), model.Name.Get(language));
             
             TextMeshProUGUI desc = UiFactory.Text("DialogDesc", dialogPanel.transform, descStr, 20, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
             RectTransform descRect = desc.rectTransform;
@@ -389,7 +386,7 @@ namespace Microverse.UI
             descRect.offsetMax = new Vector2(-34f, -90f);
 
             // 5. Cancel ("No") Button
-            string noStr = language == MicroverseLanguage.Spanish ? "No" : "No";
+            string noStr = getText("dialog.delete.cancel");
             Button cancelButton = UiFactory.Button("CancelButton", dialogPanel.transform, noStr, () => {
                 UnityEngine.Object.Destroy(modalBg);
             }, MicroverseTheme.PanelLight, MicroverseTheme.Text, 22);
@@ -400,9 +397,8 @@ namespace Microverse.UI
             cancelRect.offsetMin = new Vector2(34f, 28f);
             cancelRect.offsetMax = new Vector2(-12f, 92f);
 
-            // 6. Confirm ("Sí") Button
-            string yesStr = language == MicroverseLanguage.Spanish ? "Sí" : 
-                            (language == MicroverseLanguage.Portuguese ? "Sim" : "Yes");
+            // 6. Confirm Button
+            string yesStr = getText("dialog.delete.confirm");
             Button confirmButton = UiFactory.Button("ConfirmButton", dialogPanel.transform, yesStr, () => {
                 onDeleteConfirmed?.Invoke();
                 UnityEngine.Object.Destroy(modalBg);

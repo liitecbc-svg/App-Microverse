@@ -13,7 +13,7 @@ namespace Microverse.UI
         private readonly Action<string> onSelect;
         private readonly Func<string, string> getText;
         private readonly Dictionary<string, TextMeshProUGUI> labels = new Dictionary<string, TextMeshProUGUI>();
-        private string selected = "home";
+        private string selected = "visualization";
 
         public BottomNavigationBar(Transform parent, Action<string> onSelect, Func<string, string> getText)
         {
@@ -27,15 +27,17 @@ namespace Microverse.UI
             rect.offsetMax = new Vector2(-28f, 142f);
 
             HorizontalLayoutGroup layout = root.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 8, 8);
-            layout.spacing = 8;
-            layout.childControlWidth = false;
+            layout.padding = new RectOffset(18, 18, 8, 8);
+            layout.spacing = 14;
+            layout.childControlWidth = true;
             layout.childControlHeight = true;
-            layout.childForceExpandWidth = false;
+            layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
             layout.childAlignment = TextAnchor.MiddleCenter;
 
-            AddTab("home", "nav.home");
+            AddTab("visualization", "nav.visualization");
+            AddTab("library", "nav.library");
+            AddTab("favorites", "nav.favorites");
         }
 
         public void SetSelected(string id)
@@ -74,7 +76,13 @@ namespace Microverse.UI
             UiFactory.ConfigureButtonLabel(label, id == "scan" ? 24 : 20, 12);
             labels[textKey] = label;
             RectTransform rect = button.GetComponent<RectTransform>();
-            rect.sizeDelta = id == "scan" ? new Vector2(190f, 110f) : new Vector2(160f, 96f);
+            rect.sizeDelta = new Vector2(0f, 96f);
+
+            LayoutElement layout = button.gameObject.AddComponent<LayoutElement>();
+            layout.minWidth = 0f;
+            layout.preferredWidth = 0f;
+            layout.flexibleWidth = 1f;
+            layout.preferredHeight = 96f;
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Microverse.UI
     public class MicroverseApp : MonoBehaviour
     {
         private const MicroverseLanguage SourceLanguage = MicroverseLanguage.English;
+        private const string TranslationModelsPreparedKey = "microverse.translation_models_prepared.v1";
 
         private IModelCatalogService catalogService;
         private ITranslationService translationService;
@@ -26,9 +27,13 @@ namespace Microverse.UI
         private RectTransform screenRoot;
         private GameObject mainCanvasGo;
         private BottomNavigationBar navigationBar;
+        private Button homeButton;
         private GameObject activeScreen;
         private BiologicalModel selectedModel;
         private string activeTab = "home";
+        private GameObject translationPreparationDialog;
+        private bool preparingTranslationModels;
+        private bool catalogLoading;
 
         // AR state variables
         private GameObject arBackgroundCanvas;
@@ -44,24 +49,14 @@ namespace Microverse.UI
             uiTextCatalog = new UiTextCatalog();
             
             BuildCanvas();
-            ShowLoadingScreen();
-
             catalogService = new CompositeModelCatalogService(new LocalModelCatalogService(), new SupabaseModelCatalogService());
-            catalogService.LoadModels(
-                loadedModels => {
-                    models = loadedModels;
-                    selectedModel = models.Count > 0 ? models[0] : null;
-                    StartCoroutine(TransitionToStartScreenWithDelay(1.5f));
-                },
-                error => {
-                    Debug.LogError("Critical: Model catalog failed to load. " + error);
-                }
-            );
+            ShowStartScreen();
         }
 
         private void ShowLoadingScreen()
         {
             ClearScreen();
+            SetHomeButtonVisible(false);
             
             GameObject loadingGo = new GameObject("LoadingScreen", typeof(RectTransform));
             loadingGo.transform.SetParent(screenRoot, false);
@@ -115,13 +110,6 @@ namespace Microverse.UI
             }
         }
 
-        private IEnumerator TransitionToStartScreenWithDelay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            ClearScreen();
-            ShowStartScreen();
-        }
-
         private void ShowStartScreen()
         {
             activeTab = "start";
@@ -131,6 +119,7 @@ namespace Microverse.UI
             {
                 navigationBar.Root.SetActive(false);
             }
+            SetHomeButtonVisible(false);
 
             GameObject startRoot = new GameObject("StartScreen", typeof(RectTransform));
             startRoot.transform.SetParent(screenRoot, false);
@@ -252,7 +241,7 @@ namespace Microverse.UI
 
             startGo.GetComponent<Image>().sprite = RoundedSpriteFactory.RoundedRectBorder(themeBlue, themeBlue, 0f, 37, 340, 75);
             Button startBtn = startGo.GetComponent<Button>();
-            startBtn.onClick.AddListener(ShowHome);
+            startBtn.onClick.AddListener(() => EnsureCatalogLoaded(() => ShowHome(HomeScreenView.CatalogMode.Ar, "visualization")));
 
             TextMeshProUGUI startText = UiFactory.Text("Label", startGo.transform, startLabel.ToUpper(), 22, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
             UiFactory.ConfigureButtonLabel(startText, 22);
@@ -266,6 +255,78 @@ namespace Microverse.UI
             footerRect.pivot = new Vector2(0.5f, 0.5f);
             footerRect.anchoredPosition = Vector2.zero;
             footerRect.sizeDelta = new Vector2(0f, 40f);
+        }
+
+        private void EnsureCatalogLoaded(Action onLoaded)
+        {
+            if (models != null)
+            {
+                onLoaded?.Invoke();
+                return;
+            }
+
+            if (catalogLoading)
+            {
+                return;
+            }
+
+            catalogLoading = true;
+            ShowLoadingScreen();
+            catalogService.LoadModels(
+                loadedModels =>
+                {
+                    catalogLoading = false;
+                    models = loadedModels;
+                    selectedModel = models != null && models.Count > 0 ? models[0] : null;
+                    if (AreTranslationModelsPrepared())
+                    {
+                        TranslateLanguageIfNeeded(language, null, false);
+                    }
+
+                    onLoaded?.Invoke();
+                },
+                error =>
+                {
+                    catalogLoading = false;
+                    Debug.LogError("Critical: Model catalog failed to load. " + error);
+                    ShowCatalogLoadError();
+                });
+        }
+
+        private void ShowCatalogLoadError()
+        {
+            ClearScreen();
+            SetHomeButtonVisible(true);
+
+            GameObject root = new GameObject("CatalogLoadError", typeof(RectTransform));
+            root.transform.SetParent(screenRoot, false);
+            UiFactory.Stretch(root.GetComponent<RectTransform>());
+            activeScreen = root;
+
+            Image bg = UiFactory.Image("Background", root.transform, BiologyVisualFactory.CreateBackground(), Color.white);
+            UiFactory.Stretch(bg.rectTransform);
+            bg.type = Image.Type.Simple;
+
+            GameObject card = UiFactory.Panel("ErrorCard", root.transform, new Color(0.02f, 0.06f, 0.14f, 0.92f), 28);
+            RectTransform cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = new Vector2(0.1f, 0.33f);
+            cardRect.anchorMax = new Vector2(0.9f, 0.62f);
+            cardRect.offsetMin = Vector2.zero;
+            cardRect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI message = UiFactory.Text("Message", card.transform, "No se pudo preparar el catalogo.", 25, FontStyles.Bold, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            RectTransform messageRect = message.rectTransform;
+            messageRect.anchorMin = new Vector2(0f, 0.42f);
+            messageRect.anchorMax = new Vector2(1f, 0.86f);
+            messageRect.offsetMin = new Vector2(34f, 0f);
+            messageRect.offsetMax = new Vector2(-34f, 0f);
+
+            Button retry = UiFactory.Button("Retry", card.transform, "Reintentar", () => EnsureCatalogLoaded(() => ShowHome(HomeScreenView.CatalogMode.Ar, "visualization")), MicroverseTheme.Cyan, Color.white, 22);
+            RectTransform retryRect = retry.GetComponent<RectTransform>();
+            retryRect.anchorMin = new Vector2(0.22f, 0.16f);
+            retryRect.anchorMax = new Vector2(0.78f, 0.16f);
+            retryRect.pivot = new Vector2(0.5f, 0.5f);
+            retryRect.sizeDelta = new Vector2(0f, 64f);
         }
 
         private void ShowInstructionsOverlay()
@@ -371,7 +432,15 @@ namespace Microverse.UI
             cg.blocksRaycasts = true;
 
             Button closeArea = overlay.AddComponent<Button>();
-            closeArea.onClick.AddListener(() => UnityEngine.Object.Destroy(overlay));
+            closeArea.onClick.AddListener(() =>
+            {
+                if (preparingTranslationModels)
+                {
+                    return;
+                }
+
+                UnityEngine.Object.Destroy(overlay);
+            });
 
             Color themeBlue = new Color(0.015f, 0.415f, 0.678f); // ULS Blue #046AAD
 
@@ -401,7 +470,7 @@ namespace Microverse.UI
             // Option 1: IDIOMA
             string langLabel = language == MicroverseLanguage.Spanish ? "Idioma" :
                                (language == MicroverseLanguage.Portuguese ? "Idioma" : "Language");
-            Button langBtn = UiFactory.Button("LanguageBtn", sidePanel.transform, langLabel.ToUpper(), () => ShowLanguageSubPanel(overlay.transform, sidePanel.transform), Color.white, themeBlue, 22);
+            Button langBtn = UiFactory.Button("LanguageBtn", sidePanel.transform, langLabel.ToUpper(), () => PrepareTranslationModelsThenShowLanguagePanel(overlay.transform, sidePanel.transform), Color.white, themeBlue, 22);
             RectTransform langRect = langBtn.GetComponent<RectTransform>();
             langRect.anchorMin = new Vector2(0.1f, 0.70f);
             langRect.anchorMax = new Vector2(0.9f, 0.70f);
@@ -496,9 +565,186 @@ namespace Microverse.UI
             UiFactory.Stretch(ptText.rectTransform);
         }
 
+        private void PrepareTranslationModelsThenShowLanguagePanel(Transform overlayTransform, Transform sidePanelTransform)
+        {
+            if (translationService == null || !translationService.IsAutomaticTranslationAvailable || AreTranslationModelsPrepared())
+            {
+                TranslateLanguageIfNeeded(language, null, false);
+                ShowLanguageSubPanel(overlayTransform, sidePanelTransform);
+                return;
+            }
+
+            if (preparingTranslationModels)
+            {
+                return;
+            }
+
+            Transform existingLang = overlayTransform.Find("LanguageSubPanel");
+            if (existingLang != null)
+            {
+                UnityEngine.Object.Destroy(existingLang.gameObject);
+            }
+
+            Transform existingCred = overlayTransform.Find("CreditsSubPanel");
+            if (existingCred != null)
+            {
+                UnityEngine.Object.Destroy(existingCred.gameObject);
+            }
+
+            Color themeBlue = new Color(0.015f, 0.415f, 0.678f);
+            translationPreparationDialog = UiFactory.Panel("TranslationModelDialog", overlayTransform, new Color(0f, 0f, 0f, 0.44f), 0);
+            UiFactory.Stretch(translationPreparationDialog.GetComponent<RectTransform>());
+
+            GameObject card = UiFactory.Panel("Content", translationPreparationDialog.transform, Color.white, 26);
+            RectTransform cardRect = card.GetComponent<RectTransform>();
+            cardRect.anchorMin = new Vector2(0.18f, 0.34f);
+            cardRect.anchorMax = new Vector2(0.82f, 0.66f);
+            cardRect.offsetMin = Vector2.zero;
+            cardRect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI title = UiFactory.Text("Title", card.transform, "Preparar traduccion offline", 28, FontStyles.Bold, themeBlue, TextAlignmentOptions.Center);
+            RectTransform titleRect = title.rectTransform;
+            titleRect.anchorMin = new Vector2(0f, 1f);
+            titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.offsetMin = new Vector2(34f, -74f);
+            titleRect.offsetMax = new Vector2(-34f, -22f);
+
+            TextMeshProUGUI status = UiFactory.Text("Status", card.transform, "Descargando modelos de traduccion...", 20, FontStyles.Normal, new Color(0.18f, 0.22f, 0.28f), TextAlignmentOptions.Center);
+            RectTransform statusRect = status.rectTransform;
+            statusRect.anchorMin = new Vector2(0f, 1f);
+            statusRect.anchorMax = new Vector2(1f, 1f);
+            statusRect.offsetMin = new Vector2(38f, -144f);
+            statusRect.offsetMax = new Vector2(-38f, -84f);
+
+            GameObject progressTrack = UiFactory.Panel("ProgressTrack", card.transform, new Color(0.82f, 0.88f, 0.94f), 12);
+            RectTransform trackRect = progressTrack.GetComponent<RectTransform>();
+            trackRect.anchorMin = new Vector2(0.08f, 0.42f);
+            trackRect.anchorMax = new Vector2(0.92f, 0.42f);
+            trackRect.pivot = new Vector2(0.5f, 0.5f);
+            trackRect.sizeDelta = new Vector2(0f, 24f);
+
+            GameObject progressFill = UiFactory.Panel("ProgressFill", progressTrack.transform, themeBlue, 12);
+            RectTransform fillRect = progressFill.GetComponent<RectTransform>();
+            fillRect.anchorMin = new Vector2(0f, 0f);
+            fillRect.anchorMax = new Vector2(0f, 1f);
+            fillRect.pivot = new Vector2(0f, 0.5f);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+
+            Button cancelButton = UiFactory.Button("Cancel", card.transform, "Cancelar", CancelTranslationModelPreparation, new Color(0.92f, 0.94f, 0.97f), themeBlue, 19);
+            RectTransform cancelRect = cancelButton.GetComponent<RectTransform>();
+            cancelRect.anchorMin = new Vector2(0.24f, 0.12f);
+            cancelRect.anchorMax = new Vector2(0.76f, 0.12f);
+            cancelRect.pivot = new Vector2(0.5f, 0.5f);
+            cancelRect.sizeDelta = new Vector2(0f, 58f);
+
+            Action<float, string> updateProgress = (progress, languageCode) =>
+            {
+                float clamped = Mathf.Clamp01(progress);
+                fillRect.anchorMax = new Vector2(clamped, 1f);
+                string languageName = TranslationLanguageName(languageCode);
+                status.text = string.IsNullOrWhiteSpace(languageName)
+                    ? "Preparando modelos de traduccion..."
+                    : "Preparando " + languageName + " para uso sin internet...";
+            };
+
+            Action<string> showError = error =>
+            {
+                preparingTranslationModels = false;
+                fillRect.anchorMax = new Vector2(0f, 1f);
+                status.text = "Falta conexion a internet para descargar los modelos de traduccion.";
+                TextMeshProUGUI label = cancelButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (label != null)
+                {
+                    label.text = "Cerrar";
+                }
+            };
+
+            if (Application.internetReachability == NetworkReachability.NotReachable)
+            {
+                showError("offline");
+                return;
+            }
+
+            preparingTranslationModels = true;
+            string source = SourceLanguage.ToLanguageCode();
+            List<string> targets = new List<string>
+            {
+                MicroverseLanguage.Spanish.ToLanguageCode(),
+                MicroverseLanguage.Portuguese.ToLanguageCode()
+            };
+
+            translationService.PrepareOfflineModels(
+                source,
+                targets,
+                updateProgress,
+                () =>
+                {
+                    preparingTranslationModels = false;
+                    PlayerPrefs.SetInt(TranslationModelsPreparedKey, 1);
+                    PlayerPrefs.Save();
+                    status.text = "Modelos listos para traducir sin internet.";
+                    fillRect.anchorMax = new Vector2(1f, 1f);
+                    TranslateLanguageIfNeeded(language, () =>
+                    {
+                        CloseTranslationPreparationDialog();
+                        ShowLanguageSubPanel(overlayTransform, sidePanelTransform);
+                    }, false);
+                },
+                showError,
+                () =>
+                {
+                    preparingTranslationModels = false;
+                    CloseTranslationPreparationDialog();
+                });
+        }
+
+        private void CancelTranslationModelPreparation()
+        {
+            if (preparingTranslationModels && translationService != null)
+            {
+                translationService.CancelOfflineModelPreparation();
+            }
+
+            preparingTranslationModels = false;
+            CloseTranslationPreparationDialog();
+        }
+
+        private void CloseTranslationPreparationDialog()
+        {
+            if (translationPreparationDialog != null)
+            {
+                UnityEngine.Object.Destroy(translationPreparationDialog);
+                translationPreparationDialog = null;
+            }
+        }
+
+        private bool AreTranslationModelsPrepared()
+        {
+            return PlayerPrefs.GetInt(TranslationModelsPreparedKey, 0) == 1;
+        }
+
+        private string TranslationLanguageName(string languageCode)
+        {
+            switch (languageCode)
+            {
+                case "es":
+                    return "espanol";
+                case "pt":
+                    return "portugues";
+                default:
+                    return string.Empty;
+            }
+        }
+
         private void SetAppLanguage(MicroverseLanguage lang, Transform overlayTransform)
         {
             language = lang;
+            if (AreTranslationModelsPrepared())
+            {
+                TranslateLanguageIfNeeded(language, null, false);
+            }
+
             if (overlayTransform != null)
             {
                 UnityEngine.Object.Destroy(overlayTransform.gameObject);
@@ -601,27 +847,139 @@ namespace Microverse.UI
             UiFactory.Stretch(screenRoot);
 
             navigationBar = new BottomNavigationBar(mainCanvasGo.transform, HandleNavigation, GetUiText);
-            navigationBar.SetSelected("home");
+            navigationBar.SetSelected("visualization");
+            homeButton = CreateHomeButton(mainCanvasGo.transform);
+            SetHomeButtonVisible(false);
+        }
+
+        private Button CreateHomeButton(Transform parent)
+        {
+            GameObject buttonGo = new GameObject("HomeButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            buttonGo.transform.SetParent(parent, false);
+
+            RectTransform rect = buttonGo.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(-54f, -54f);
+            rect.sizeDelta = new Vector2(88f, 88f);
+
+            Image background = buttonGo.GetComponent<Image>();
+            background.sprite = RoundedSpriteFactory.RoundedRectBorder(MicroverseTheme.Cyan, new Color(0.01f, 0.04f, 0.10f, 0.96f), 3f, 26, 88, 88);
+            background.type = Image.Type.Simple;
+
+            Button button = buttonGo.GetComponent<Button>();
+            button.targetGraphic = background;
+            button.colors = UiFactory.ButtonColors(background.color);
+            button.onClick.AddListener(ShowStartScreen);
+
+            Image icon = UiFactory.Image("Icon", buttonGo.transform, CreateHomeIconSprite(MicroverseTheme.Text), MicroverseTheme.Text);
+            RectTransform iconRect = icon.rectTransform;
+            iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.pivot = new Vector2(0.5f, 0.5f);
+            iconRect.anchoredPosition = Vector2.zero;
+            iconRect.sizeDelta = new Vector2(52f, 52f);
+
+            return button;
+        }
+
+        private void SetHomeButtonVisible(bool visible)
+        {
+            if (homeButton != null)
+            {
+                homeButton.gameObject.SetActive(visible);
+            }
+        }
+
+        private static Sprite CreateHomeIconSprite(Color color)
+        {
+            const int size = 96;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            texture.wrapMode = TextureWrapMode.Clamp;
+
+            Color clear = new Color(0f, 0f, 0f, 0f);
+            Color[] pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = clear;
+            }
+            texture.SetPixels(pixels);
+
+            DrawLine(texture, new Vector2(18f, 52f), new Vector2(48f, 78f), color, 8);
+            DrawLine(texture, new Vector2(48f, 78f), new Vector2(78f, 52f), color, 8);
+            DrawLine(texture, new Vector2(27f, 50f), new Vector2(27f, 17f), color, 8);
+            DrawLine(texture, new Vector2(69f, 50f), new Vector2(69f, 17f), color, 8);
+            DrawLine(texture, new Vector2(27f, 17f), new Vector2(69f, 17f), color, 8);
+            DrawLine(texture, new Vector2(39f, 17f), new Vector2(39f, 35f), color, 7);
+            DrawLine(texture, new Vector2(57f, 17f), new Vector2(57f, 35f), color, 7);
+            DrawLine(texture, new Vector2(39f, 35f), new Vector2(57f, 35f), color, 7);
+
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        }
+
+        private static void DrawLine(Texture2D texture, Vector2 start, Vector2 end, Color color, int thickness)
+        {
+            int steps = Mathf.CeilToInt(Vector2.Distance(start, end) * 2f);
+            for (int i = 0; i <= steps; i++)
+            {
+                Vector2 point = Vector2.Lerp(start, end, steps == 0 ? 0f : i / (float)steps);
+                DrawCircle(texture, Mathf.RoundToInt(point.x), Mathf.RoundToInt(point.y), thickness, color);
+            }
+        }
+
+        private static void DrawCircle(Texture2D texture, int centerX, int centerY, int radius, Color color)
+        {
+            for (int y = -radius; y <= radius; y++)
+            {
+                for (int x = -radius; x <= radius; x++)
+                {
+                    if (x * x + y * y > radius * radius)
+                    {
+                        continue;
+                    }
+
+                    int px = centerX + x;
+                    int py = centerY + y;
+                    if (px >= 0 && px < texture.width && py >= 0 && py < texture.height)
+                    {
+                        texture.SetPixel(px, py, color);
+                    }
+                }
+            }
         }
 
         private void HandleNavigation(string tab)
         {
-            if (activeTab == "home" && tab == "home")
+            if (tab == "home")
             {
                 ShowStartScreen();
                 return;
             }
 
-            activeTab = tab;
-            if (tab == "home")
+            if (tab == "visualization")
             {
-                ShowHome();
+                EnsureCatalogLoaded(() => ShowHome(HomeScreenView.CatalogMode.Ar, "visualization"));
                 return;
             }
 
+            if (tab == "library")
+            {
+                EnsureCatalogLoaded(() => ShowHome(HomeScreenView.CatalogMode.Library, "library"));
+                return;
+            }
+
+            if (tab == "favorites")
+            {
+                EnsureCatalogLoaded(() => ShowHome(HomeScreenView.CatalogMode.Favorites, "favorites"));
+                return;
+            }
+
+            activeTab = tab;
             if (tab == "categories")
             {
-                ShowCategories();
+                EnsureCatalogLoaded(ShowCategories);
                 return;
             }
 
@@ -641,15 +999,21 @@ namespace Microverse.UI
 
         private void ShowHome()
         {
-            activeTab = "home";
+            ShowHome(HomeScreenView.CatalogMode.Ar, "visualization");
+        }
+
+        private void ShowHome(HomeScreenView.CatalogMode mode, string selectedTab)
+        {
+            activeTab = selectedTab;
             ClearScreen();
-            HomeScreenView home = new HomeScreenView(screenRoot, models, catalogService.GetCategories(), language, HandleModelSelected, CycleLanguage, GetUiText);
+            SetHomeButtonVisible(true);
+            HomeScreenView home = new HomeScreenView(screenRoot, models, catalogService.GetCategories(), language, HandleModelSelected, CycleLanguage, GetUiText, mode);
             activeScreen = home.Root;
             if (navigationBar != null && navigationBar.Root != null)
             {
                 navigationBar.Root.SetActive(true);
                 navigationBar.RefreshLabels();
-                navigationBar.SetSelected("home");
+                navigationBar.SetSelected(selectedTab);
             }
         }
 
@@ -657,6 +1021,7 @@ namespace Microverse.UI
         {
             activeTab = "categories";
             ClearScreen();
+            SetHomeButtonVisible(true);
             CategoriesScreenView categoriesView = new CategoriesScreenView(screenRoot, models, catalogService.GetCategories(), language, HandleModelSelected, GetUiText);
             activeScreen = categoriesView.Root;
             if (navigationBar != null && navigationBar.Root != null)
@@ -672,6 +1037,7 @@ namespace Microverse.UI
             selectedModel = model;
             activeTab = "scan";
             ClearScreen();
+            SetHomeButtonVisible(true);
             DetailScreenView detail = new DetailScreenView(screenRoot, models, model, language, ShowHome, EnterARMode, GetUiText);
             activeScreen = detail.Root;
             if (navigationBar != null && navigationBar.Root != null)
@@ -696,6 +1062,7 @@ namespace Microverse.UI
         private void ShowPlaceholder(string tab)
         {
             ClearScreen();
+            SetHomeButtonVisible(true);
             GameObject root = new GameObject("Placeholder-" + tab, typeof(RectTransform));
             root.transform.SetParent(screenRoot, false);
             UiFactory.Stretch(root.GetComponent<RectTransform>());
@@ -732,6 +1099,7 @@ namespace Microverse.UI
         {
             activeTab = "profile";
             ClearScreen();
+            SetHomeButtonVisible(true);
             GameObject root = new GameObject("CreditsScreen", typeof(RectTransform));
             root.transform.SetParent(screenRoot, false);
             UiFactory.Stretch(root.GetComponent<RectTransform>());
@@ -812,9 +1180,9 @@ namespace Microverse.UI
             {
                 ShowDetail(selectedModel);
             }
-            else if (activeTab == "home")
+            else if (IsCatalogTab(activeTab))
             {
-                ShowHome();
+                ShowCatalogTab(activeTab);
             }
             else if (activeTab == "profile")
             {
@@ -839,6 +1207,12 @@ namespace Microverse.UI
             }
 
             if (translationService == null || !translationService.IsAutomaticTranslationAvailable)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            if (!AreTranslationModelsPrepared())
             {
                 onComplete?.Invoke();
                 return;
@@ -922,9 +1296,9 @@ namespace Microverse.UI
             {
                 ShowDetail(selectedModel);
             }
-            else if (activeTab == "home")
+            else if (IsCatalogTab(activeTab))
             {
-                ShowHome();
+                ShowCatalogTab(activeTab);
             }
             else if (activeTab == "profile")
             {
@@ -933,6 +1307,27 @@ namespace Microverse.UI
             else
             {
                 ShowPlaceholder(activeTab);
+            }
+        }
+
+        private bool IsCatalogTab(string tab)
+        {
+            return tab == "visualization" || tab == "library" || tab == "favorites";
+        }
+
+        private void ShowCatalogTab(string tab)
+        {
+            switch (tab)
+            {
+                case "library":
+                    ShowHome(HomeScreenView.CatalogMode.Library, "library");
+                    break;
+                case "favorites":
+                    ShowHome(HomeScreenView.CatalogMode.Favorites, "favorites");
+                    break;
+                default:
+                    ShowHome(HomeScreenView.CatalogMode.Ar, "visualization");
+                    break;
             }
         }
 
@@ -994,6 +1389,7 @@ namespace Microverse.UI
             // 1. Hide the main app UI and navigation bar
             if (screenRoot != null) screenRoot.gameObject.SetActive(false);
             if (navigationBar != null && navigationBar.Root != null) navigationBar.Root.SetActive(false);
+            SetHomeButtonVisible(false);
             if (mainCanvasGo != null) mainCanvasGo.SetActive(false);
 
             // 2. Configure Main Camera
@@ -1214,6 +1610,7 @@ namespace Microverse.UI
             if (mainCanvasGo != null) mainCanvasGo.SetActive(true);
             if (screenRoot != null) screenRoot.gameObject.SetActive(true);
             if (navigationBar != null && navigationBar.Root != null) navigationBar.Root.SetActive(true);
+            SetHomeButtonVisible(true);
         }
 
         private GameObject CreateProcedural3DCell(BiologicalModel model)

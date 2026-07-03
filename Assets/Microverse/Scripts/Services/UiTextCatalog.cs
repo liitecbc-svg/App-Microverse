@@ -8,6 +8,9 @@ namespace Microverse.Services
         private readonly Dictionary<string, string> sourceTexts = new Dictionary<string, string>
         {
             { "nav.home", "Home" },
+            { "nav.visualization", "Visualization" },
+            { "nav.library", "3D Library" },
+            { "nav.favorites", "Favorites" },
             { "nav.categories", "Categories" },
             { "nav.learn", "Learn" },
             { "nav.profile", "Credits" },
@@ -59,6 +62,9 @@ namespace Microverse.Services
         private readonly Dictionary<string, string> spanishTexts = new Dictionary<string, string>
         {
             { "nav.home", "Inicio" },
+            { "nav.visualization", "Visualizacion" },
+            { "nav.library", "Biblioteca 3D" },
+            { "nav.favorites", "Favoritos" },
             { "nav.categories", "Categorias" },
             { "nav.learn", "Aprender" },
             { "nav.profile", "Creditos" },
@@ -110,6 +116,9 @@ namespace Microverse.Services
         private readonly Dictionary<string, string> portugueseTexts = new Dictionary<string, string>
         {
             { "nav.home", "Inicio" },
+            { "nav.visualization", "Visualizacao" },
+            { "nav.library", "Biblioteca 3D" },
+            { "nav.favorites", "Favoritos" },
             { "nav.categories", "Categorias" },
             { "nav.learn", "Aprender" },
             { "nav.profile", "Creditos" },

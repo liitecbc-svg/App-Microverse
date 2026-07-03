@@ -29,13 +29,13 @@ namespace Microverse.UI
             HorizontalLayoutGroup layout = root.AddComponent<HorizontalLayoutGroup>();
             layout.padding = new RectOffset(10, 10, 8, 8);
             layout.spacing = 8;
-            layout.childControlWidth = true;
+            layout.childControlWidth = false;
             layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
+            layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = true;
+            layout.childAlignment = TextAnchor.MiddleCenter;
 
             AddTab("home", "nav.home");
-            AddTab("profile", "nav.profile");
         }
 
         public void SetSelected(string id)

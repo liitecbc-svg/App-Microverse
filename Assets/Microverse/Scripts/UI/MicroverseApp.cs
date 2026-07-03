@@ -517,6 +517,12 @@ namespace Microverse.UI
 
         private void HandleNavigation(string tab)
         {
+            if (activeTab == "home" && tab == "home")
+            {
+                ShowStartScreen();
+                return;
+            }
+
             activeTab = tab;
             if (tab == "home")
             {

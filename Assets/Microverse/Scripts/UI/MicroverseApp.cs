@@ -358,13 +358,6 @@ namespace Microverse.UI
             string source = SourceLanguage.ToLanguageCode();
             string target = targetLanguage.ToLanguageCode();
 
-            foreach (string key in uiTextCatalog.Keys)
-            {
-                string uiText = uiTextCatalog.GetSource(key);
-                requests.Add(new TranslationRequest(uiText, source, target));
-                applyTranslatedText.Add(translated => uiTextCatalog.Set(targetLanguage, key, translated));
-            }
-
             foreach (BiologicalModel model in models)
             {
                 AddTranslationRequest(model.Name, targetLanguage, source, target, requests, applyTranslatedText);
@@ -407,7 +400,24 @@ namespace Microverse.UI
             List<TranslationRequest> requests,
             List<Action<string>> applyTranslatedText)
         {
+            if (text == null)
+            {
+                return;
+            }
+
             string sourceText = text.GetSource(SourceLanguage);
+            if (string.IsNullOrWhiteSpace(sourceText))
+            {
+                return;
+            }
+
+            string currentTargetText = text.Get(targetLanguage);
+            if (!string.IsNullOrWhiteSpace(currentTargetText) &&
+                !string.Equals(currentTargetText, sourceText, StringComparison.Ordinal))
+            {
+                return;
+            }
+
             requests.Add(new TranslationRequest(sourceText, source, target));
             applyTranslatedText.Add(translated => text.Set(targetLanguage, translated));
         }

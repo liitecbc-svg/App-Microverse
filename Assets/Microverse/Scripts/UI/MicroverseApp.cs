@@ -78,7 +78,7 @@ namespace Microverse.UI
             cardRect.offsetMax = Vector2.zero;
 
             // 3. App Logo
-            Texture2D logoTex = Resources.Load<Texture2D>("AppLogo/microverse-logo-temp");
+            Texture2D logoTex = Resources.Load<Texture2D>("AppLogo/microverse-logo-main");
             if (logoTex != null)
             {
                 Sprite logoSprite = Sprite.Create(logoTex, new Rect(0, 0, logoTex.width, logoTex.height), new Vector2(0.5f, 0.5f));
@@ -170,7 +170,7 @@ namespace Microverse.UI
                 line.GetComponent<Image>().color = themeBlue;
             }
             // 3. Add App Logo (centered and large)
-            Texture2D logoTex = Resources.Load<Texture2D>("AppLogo/microverse-logo-temp");
+            Texture2D logoTex = Resources.Load<Texture2D>("AppLogo/microverse-logo-main");
             if (logoTex != null)
             {
                 Sprite logoSprite = Sprite.Create(logoTex, new Rect(0, 0, logoTex.width, logoTex.height), new Vector2(0.5f, 0.5f));

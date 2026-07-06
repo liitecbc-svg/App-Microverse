@@ -46,6 +46,17 @@ namespace Microverse.UI
         private List<CameraAttempt> attempts = new List<CameraAttempt>();
         private int currentAttemptIndex = 0;
 
+        private Coroutine startCameraCoroutine;
+        private bool isWaitingForPermission = false;
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus && isWaitingForPermission)
+            {
+                isWaitingForPermission = false;
+            }
+        }
+
         private void Awake()
         {
             rawImage = GetComponent<RawImage>();
@@ -66,18 +77,45 @@ namespace Microverse.UI
 
         private void OnDisable()
         {
+            if (startCameraCoroutine != null)
+            {
+                StopCoroutine(startCameraCoroutine);
+                startCameraCoroutine = null;
+            }
             StopCamera();
         }
 
         private void StartCamera()
         {
-            if (webcamTexture != null) return;
+            if (startCameraCoroutine != null)
+            {
+                StopCoroutine(startCameraCoroutine);
+            }
+            startCameraCoroutine = StartCoroutine(StartCameraRoutine());
+        }
+
+        private System.Collections.IEnumerator StartCameraRoutine()
+        {
+            if (webcamTexture != null) yield break;
 
             // Request camera permission if on mobile
-            #if UNITY_ANDROID || UNITY_IOS
+            #if UNITY_ANDROID
+            if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Camera))
+            {
+                isWaitingForPermission = true;
+                UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.Camera);
+                
+                // Wait until the user responds to the permission dialog
+                while (isWaitingForPermission && !UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Camera))
+                {
+                    yield return null;
+                }
+                isWaitingForPermission = false;
+            }
+            #elif UNITY_IOS
             if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
             {
-                Application.RequestUserAuthorization(UserAuthorization.WebCam);
+                yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
             }
             #endif
 
@@ -93,7 +131,7 @@ namespace Microverse.UI
             {
                 Debug.LogWarning("No camera device found or accessible.");
                 ShowFallbackBackground();
-                return;
+                yield break;
             }
 
             // Group devices into primary candidate list (e.g. back facing or video0/even) and fallback list
@@ -139,7 +177,7 @@ namespace Microverse.UI
             {
                 Debug.LogWarning("No suitable camera devices configured for attempts.");
                 ShowFallbackBackground();
-                return;
+                yield break;
             }
 
             currentAttemptIndex = 0;

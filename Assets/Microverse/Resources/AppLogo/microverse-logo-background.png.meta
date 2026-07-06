@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 130fec46c6bd4b148da68291aed8a9e9
+guid: 12643032e1704640813067c24cfc9349
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -52,7 +52,7 @@ TextureImporter:
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
-  alphaIsTransparency: 0
+  alphaIsTransparency: 1
   spriteTessellationDetail: -1
   textureType: 0
   textureShape: 1
@@ -74,7 +74,6 @@ TextureImporter:
     textureFormat: -1
     textureCompression: 0
     compressionQuality: 100
-    crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
@@ -91,7 +90,7 @@ TextureImporter:
     vertices: []
     indices:
     edges: []
-    weights:
+    weights: []
     secondaryTextures: []
     nameFileIdTable: {}
   mipmapLimitGroupName:

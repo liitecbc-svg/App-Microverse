@@ -1,0 +1,228 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Paquetes de Idioma y Codificación ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[T1]{fontenc}
+
+% --- Diseño de Página y Márgenes ---
+\usepackage{geometry}
+\geometry{
+    a4paper,
+    top=25mm,
+    bottom=25mm,
+    left=25mm,
+    right=25mm
+}
+
+% --- Tipografía y Estética ---
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage{microtype} 
+
+% --- Colores Personalizados ---
+\usepackage[table,dvipsnames]{xcolor}
+\definecolor{primaryDark}{HTML}{1A365D}   
+\definecolor{accentBlue}{HTML}{2B6CB0}    
+\definecolor{neutralLight}{HTML}{F7FAFC}  
+\definecolor{borderGrey}{HTML}{E2E8F0}   
+\definecolor{textDark}{HTML}{2D3748}     
+
+% --- Configuración de Texto ---
+\usepackage{parskip} 
+
+% --- Encabezados y Pies de Página ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+\setlength{\headheight}{14pt}
+
+\fancyhead[L]{\small\color{textDark}\textsf{Especificación de Requisitos -- Microverse}}
+\fancyhead[R]{\small\color{textDark}\textsf{Documento Técnico}}
+\fancyfoot[C]{\small\color{textDark}\thepage}
+
+% --- Tablas Estilizadas ---
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+% --- Cuadros de Texto y Elementos Flotantes ---
+\usepackage{float}
+
+% --- Enlaces e Índices ---
+\usepackage[pdftex]{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryDark,
+    filecolor=accentBlue,      
+    urlcolor=accentBlue,
+    citecolor=primaryDark,
+    pdftitle={Especificación de Requisitos -- Microverse},
+    pdfauthor={Brandon Muñoz - Cristhian Montenegro}
+}
+
+% --- Datos de Portada ---
+\title{
+    \vspace{-15mm}
+    \begin{flushleft}
+        \color{primaryDark}\Huge\bfseries Especificación de Requisitos\\
+        \vspace{2mm}
+        \color{accentBlue}\Large\fontseries{m}\selectfont Proyecto: Microverse (Aplicación de Visualización 3D y Cámara para Biología Celular)
+    \end{flushleft}
+    \vspace{5mm}
+    \hrule height 1.5pt
+    \vspace{-5mm}
+}
+\author{
+    \textbf{Preparado por:} Brandon Muñoz -- Cristhian Montenegro \\
+    \textbf{Roles:} Desarrolladores \\
+    \textbf{Entidades Colaboradoras:} ULS (Universidad de La Serena), LIITEC \\
+    \textbf{Cliente / Colaboradora:} Profa. Dra. Cassia Fernanda Yano
+}
+\date{Julio de 2026}
+
+\begin{document}
+
+\maketitle
+
+\thispagestyle{empty} 
+\vspace{10mm}
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Información del Documento y Control de Versiones}
+    \vspace{2mm}
+    \begin{tabularx}{\textwidth}{@{} >{\bfseries\color{primaryDark}}l X @{}}
+        \toprule
+        Código del Documento & REQ-MICROVERSE-001 \\
+        Versión & 1.3 \\
+        Estado & En Corrección (Fase de Levantamiento) \\
+        Fecha de Entrega & \today \\
+        Destinatario & Equipo de Desarrollo, Evaluadores ULS / LIITEC / Profa. Dra. Cassia Fernanda Yano\\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\vspace{5mm}
+\hrule
+\vspace{5mm}
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introducción}
+
+\subsection{Propósito}
+El propósito de este documento es definir de manera clara, formal y estructurada los requisitos funcionales y no funcionales para el desarrollo de \textbf{Microverse}. Este sistema busca transformar el aprendizaje de la biología celular mediante el uso de visualización interactiva en 3D sobre la cámara del dispositivo, proporcionando a estudiantes y profesores de escuelas una herramienta liviana y de fácil acceso que simplifique la comprensión de una gran variedad de estructuras celulares en entornos de aula, laboratorios o el hogar.
+
+\subsection{Alcance del Sistema}
+El proyecto comprende el desarrollo de una solución de software compuesta por dos componentes principales de interacción:
+\begin{enumerate}
+    \item \textbf{Aplicación Móvil (Android):} Software enfocado en el estudiante y profesor para la visualización e interacción con modelos 3D superpuestos en tiempo real sobre el flujo de la cámara trasera del dispositivo, navegación del catálogo de las diferentes entidades biológicas, manipulación táctil (zoom, rotación) y visualización de etiquetas informativas multilingües.
+    \item \textbf{Sistema de Panel Web (Back-End + CRUD):} Plataforma administrativa para los colaboradores calificados que permite gestionar el catálogo de los modelos biológicos, subir modelos optimizados, actualizar descripciones técnicas en múltiples idiomas y validar la fidelidad científica de los recursos didácticos antes de su despliegue.
+\end{enumerate}
+
+El sistema prioriza la portabilidad extrema de la app móvil y el control riguroso de la conectividad en el aula, permitiendo descargas modulares e interacciones sin internet (offline).
+
+\subsection{Definiciones y Acrónimos}
+\begin{itemize}
+    \item \textbf{IdD / ID:} Identificador de Requisito.
+    \item \textbf{RF:} Requisito Funcional.
+    \item \textbf{RNF:} Requisito No Funcional.
+    \item \textbf{CRUD:} Operaciones básicas de persistencia de datos (Create, Read, Update, Delete).
+    \item \textbf{ULS:} Universidad de La Serena.
+    \item \textbf{Asset Bundle / Addressable:} Sistema de Unity para empaquetar y descargar recursos dinámicamente desde un servidor web externo reduciendo el tamaño del instalador.
+\end{itemize}
+\newpage
+\section{Descripción General}
+
+\subsection{Perspectiva del Producto}
+Microverse actúa como un recurso educativo abierto y autónomo, desarrollado bajo el contexto institucional de la Universidad de La Serena y LIITEC, en colaboración con la Profa. Dra. Cassia Fernanda Yano, Académica del Instituto Federal do Paraná, Brasil, correspondiente a la contraparte académica solicitante y colaboradora del proyecto. El ecosistema asume que los dispositivos finales de las escuelas públicas o privadas pueden poseer limitaciones de hardware y conectividad variable, por lo que la arquitectura desacopla el núcleo de la aplicación de los datos de los modelos 3D volumétricos, los cuales se sincronizan con un servidor central cuando haya acceso a red disponible.
+
+\subsection{Funciones del Producto}
+\begin{itemize}
+    \item Proyección de modelos biológicos 3D integrados directamente en la pantalla sobre la vista de la cámara.
+    \item Manipulación interactiva (rotar y aumentar o reducir zoom) mediante gestos multitáctiles en pantallas móviles.
+    \item Despliegue de descripciones anatómicas breves y diferencias funcionales de cada organelo al ser seleccionado de forma individual.
+    \item Búsqueda y filtrado dinámico del inventario biológico cargado.
+    \item Mantenimiento centralizado de datos e idiomas desde la web y persistencia local de datos descargados para uso offline doméstico.
+    \end{itemize}
+\newpage
+\section{Requisitos Funcionales (RF)}
+\subsection{Matriz de Requisitos Funcionales}
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Especificación de Requisitos Funcionales}
+    \vspace{2mm}
+    \renewcommand{\arraystretch}{1.3}
+    \rowcolors{2}{neutralLight}{white}
+    \begin{tabularx}{\textwidth}{l >{\bfseries}l X c}
+        \rowcolor{primaryDark}
+        \color{white}\textbf{ID} & \color{white}\textbf{Nombre del Requisito} & \color{white}\textbf{Descripción Funcional} & \color{white}\textbf{Prioridad} \\ \toprule
+        RF-001 & Proyección 3D sobre Cámara & La app móvil permitirá proyectar el modelo 3D seleccionado directamente sobre la vista en tiempo real de la cámara trasera. & Alta \\
+        RF-002 & Manipulación Táctil 3D & El sistema permitirá interactuar con los modelos mediante gestos táctiles estándar, incluyendo rotación, acercamiento y alejamiento mediante zoom. & Alta \\ 
+        RF-003 & Etiquetas de Organelos & La app desplegará una etiqueta flotante con el nombre del organelo seleccionado junto a una breve descripción al interactuar con él. & Alta \\
+        RF-004 & Soporte Multi-idioma & La interfaz móvil y su contenido descriptivo deberán permitir cambio dinámico entre español, inglés y portugués. & Media \\
+        RF-005 & Catálogo Móvil y Búsqueda & La aplicación móvil integrará un motor de búsqueda de las estructuras biológicas por su nombre científico o común, junto con un sistema de filtros por clasificación taxonómica. & Alta \\
+        RF-006 & Descarga Dinámica Integrada & El software móvil listará modelos biológicos adicionales disponibles en el servidor web y permitirá descargarlas directamente al almacenamiento local para expandir el inventario. & Alta \\
+        RF-007 & Panel Web Administrativo (CRUD) & El sistema web proveerá un módulo CRUD completo para gestionar el catálogo (crear, leer, actualizar y eliminar), textos multi-idioma y archivos de modelado. & Alta \\
+        RF-008 & Créditos e Identidad Visual & La app móvil incluirá una sección visible de créditos de desarrollo que muestre los logos oficiales de la ULS y LIITEC, a Brandon Muñoz y Cristhian Montenegro en desarrollo, y a la Profa. Dra. Cassia Fernanda Yano como colaboradora. & Media \\
+        RF-009 & Manual de Uso Integrado & La app móvil contendrá un manual de usuario y guía de inicio rápido para instruir a los usuarios en el uso de la aplicación y la visualización de los modelos 3D. & Media \\ \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{Requisitos No Funcionales (RNF)}
+\subsection{Matriz de Requisitos No Funcionales}
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Especificación de Requisitos No Funcionales}
+    \vspace{2mm}
+    \renewcommand{\arraystretch}{1.3}
+    \rowcolors{2}{neutralLight}{white}
+    \begin{tabularx}{\textwidth}{l >{\bfseries}l X c}
+        \rowcolor{primaryDark}
+        \color{white}\textbf{ID} & \color{white}\textbf{Atributo de Calidad} & \color{white}\textbf{Especificación Técnica / Restricción} & \color{white}\textbf{Prioridad} \\ \toprule
+        RNF-001 & Plataforma de Destino & El componente móvil del sistema se ejecutará en dispositivos con el sistema operativo Android 8.0 (Oreo, API Level 26) o superior de manera exclusiva. & Crítica \\
+        RNF-002 & Control de Peso (App Lite) & El tamaño de descarga inicial del instalador (`.apk` / `.aab`) de la app móvil en Google Play no superará los 200 MB. Las células adicionales se procesarán externamente en paquetes comprimidos. & Alta \\
+        RNF-003 & Formatos de Modelado & El panel web aceptará y procesará recursos de origen en formatos estándar de la industria como `.fbx` u optimizados nativos de Blender (`.blend`), exportando bundles optimizados para móviles. & Media \\
+        RNF-004 & Permiso de Cámara en Runtime & La aplicación móvil solicitará formalmente el permiso de acceso a la cámara trasera solo en tiempo de ejecución. Ningún dato fotográfico o de video será almacenado ni transmitido al exterior. & Crítica \\
+        RNF-005 & Persistencia Local y Caché & La app móvil almacenará las células descargadas en la caché local del dispositivo de forma permanente para posibilitar el uso de la aplicación offline en hogares o aulas sin conectividad. & Alta \\
+        RNF-006 & Resiliencia de Conectividad & La app validará el estado de la conexión a internet mediante servicios de red antes de gatillar descargas, bloqueando funciones de red con alertas amigables si el dispositivo está sin señal. & Alta \\
+        RNF-007 & Interfaz de Alta Visibilidad & La interfaz de usuario estará optimizada tipográfica y cromáticamente para lecturas nítidas tanto en la pantalla de smartphones individuales como en proyecciones de proyectores escolares. & Media \\ \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{Criterios de Aceptación y Validación}
+\begin{itemize}
+    \item \textbf{Validación de Componentes:} Se comprobará unitariamente el correcto renderizado tridimensional y el comportamiento dinámico de los gestos de zoom, rotación y ocultamiento de las células precargadas y descargadas dentro de la plataforma Android.
+    \item \textbf{Pruebas de Integración y API:} Verificación de la comunicación transparente mediante llamadas HTTP entre la aplicación móvil y el panel web CRUD, garantizando que al subir una célula en el servidor, esta se visualice de inmediato en la búsqueda del móvil si cuenta con red.
+    \item \textbf{Verificación de Privacidad y Permisos:} Inspección estricta del uso de la API de la cámara en Android. La aplicación deberá pasar las pruebas de seguridad interna demostrando que el flujo de video es consumido exclusivamente por el componente de renderizado de la cámara trasera de manera volátil y local.
+    \item \textbf{Aprobación Institucional y Académica:} Validación final de la correcta colocación y proporciones de la identidad gráfica de la ULS y LIITEC, junto con la revisión de la contraparte académica solicitante para asegurar la coherencia visual y científica del proyecto. 
+\end{itemize}
+
+\section{Aprobación del Documento}
+
+\vspace{15mm}
+
+\begin{tabularx}{\textwidth}{Y Y Y}
+    \rule{4.2cm}{0.4pt} &
+    \rule{4.2cm}{0.4pt} &
+    \rule{4.2cm}{0.4pt} \\
+
+    Nombre y firma del cliente &
+    Nombre y firma del desarrollador  &
+    Nombre y firma del desarrollador  \\[5mm]
+
+    Fecha: \rule{2.2cm}{0.4pt} &
+    Fecha: \rule{2.2cm}{0.4pt} &
+    Fecha: \rule{2.2cm}{0.4pt}
+\end{tabularx}
+\end{document}

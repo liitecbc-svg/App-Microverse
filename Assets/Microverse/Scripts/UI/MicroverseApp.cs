@@ -488,6 +488,17 @@ namespace Microverse.UI
             aboutRect.pivot = new Vector2(0.5f, 0.5f);
             aboutRect.anchoredPosition = Vector2.zero;
             aboutRect.sizeDelta = new Vector2(0f, 75f);
+
+            // Option 3: PRIVACIDAD
+            string privacyLabel = language == MicroverseLanguage.Spanish ? "Políticas de Privacidad" :
+                                  (language == MicroverseLanguage.Portuguese ? "Políticas de Privacidade" : "Privacy Policy");
+            Button privacyBtn = UiFactory.Button("PrivacyBtn", sidePanel.transform, privacyLabel.ToUpper(), () => Application.OpenURL("https://liitec.userena.cl/politicas-de-privacidad/"), Color.white, themeBlue, 22);
+            RectTransform privacyRect = privacyBtn.GetComponent<RectTransform>();
+            privacyRect.anchorMin = new Vector2(0.1f, 0.40f);
+            privacyRect.anchorMax = new Vector2(0.9f, 0.40f);
+            privacyRect.pivot = new Vector2(0.5f, 0.5f);
+            privacyRect.anchoredPosition = Vector2.zero;
+            privacyRect.sizeDelta = new Vector2(0f, 75f);
         }
 
         private void ShowLanguageSubPanel(Transform overlayTransform, Transform sidePanelTransform)

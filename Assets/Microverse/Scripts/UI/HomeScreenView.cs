@@ -75,7 +75,7 @@ namespace Microverse.UI
 
         private void BuildHeader()
         {
-            Texture2D logoTexture = Resources.Load<Texture2D>("AppLogo/microverse-logo-temp");
+            Texture2D logoTexture = Resources.Load<Texture2D>("AppLogo/microverse-logo-main");
             Sprite logoSprite = logoTexture == null
                 ? null
                 : Sprite.Create(logoTexture, new Rect(0f, 0f, logoTexture.width, logoTexture.height), new Vector2(0.5f, 0.5f));

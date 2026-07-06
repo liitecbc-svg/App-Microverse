@@ -23,7 +23,7 @@ namespace Microverse.UI
         private IReadOnlyList<BiologicalModel> models;
         private readonly HashSet<MicroverseLanguage> translatedLanguages = new HashSet<MicroverseLanguage>();
         private readonly HashSet<MicroverseLanguage> pendingTranslationLanguages = new HashSet<MicroverseLanguage>();
-        private MicroverseLanguage language = MicroverseLanguage.Spanish;
+        private MicroverseLanguage language = MicroverseLanguage.English;
         private RectTransform screenRoot;
         private GameObject mainCanvasGo;
         private BottomNavigationBar navigationBar;
@@ -685,11 +685,9 @@ namespace Microverse.UI
                     PlayerPrefs.Save();
                     status.text = "Modelos listos para traducir sin internet.";
                     fillRect.anchorMax = new Vector2(1f, 1f);
-                    TranslateLanguageIfNeeded(language, () =>
-                    {
-                        CloseTranslationPreparationDialog();
-                        ShowLanguageSubPanel(overlayTransform, sidePanelTransform);
-                    }, false);
+                    CloseTranslationPreparationDialog();
+                    ShowLanguageSubPanel(overlayTransform, sidePanelTransform);
+                    TranslateLanguageIfNeeded(language, null, false);
                 },
                 showError,
                 () =>
@@ -1213,6 +1211,12 @@ namespace Microverse.UI
             }
 
             if (!AreTranslationModelsPrepared())
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            if (models == null)
             {
                 onComplete?.Invoke();
                 return;

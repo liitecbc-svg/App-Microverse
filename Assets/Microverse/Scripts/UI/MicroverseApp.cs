@@ -488,6 +488,17 @@ namespace Microverse.UI
             aboutRect.pivot = new Vector2(0.5f, 0.5f);
             aboutRect.anchoredPosition = Vector2.zero;
             aboutRect.sizeDelta = new Vector2(0f, 75f);
+
+            // Option 3: PRIVACIDAD
+            string privacyLabel = language == MicroverseLanguage.Spanish ? "Políticas de Privacidad" :
+                                  (language == MicroverseLanguage.Portuguese ? "Políticas de Privacidade" : "Privacy Policy");
+            Button privacyBtn = UiFactory.Button("PrivacyBtn", sidePanel.transform, privacyLabel.ToUpper(), () => Application.OpenURL("https://liitec.userena.cl/politicas-de-privacidad/"), Color.white, themeBlue, 22);
+            RectTransform privacyRect = privacyBtn.GetComponent<RectTransform>();
+            privacyRect.anchorMin = new Vector2(0.1f, 0.40f);
+            privacyRect.anchorMax = new Vector2(0.9f, 0.40f);
+            privacyRect.pivot = new Vector2(0.5f, 0.5f);
+            privacyRect.anchoredPosition = Vector2.zero;
+            privacyRect.sizeDelta = new Vector2(0f, 75f);
         }
 
         private void ShowLanguageSubPanel(Transform overlayTransform, Transform sidePanelTransform)
@@ -788,21 +799,102 @@ namespace Microverse.UI
             titleRect.offsetMin = new Vector2(20f, -120f);
             titleRect.offsetMax = new Vector2(-20f, -40f);
 
-            string creditsStr = language == MicroverseLanguage.Spanish ?
-                "Obra propiedad intelectual de la Universidad de La Serena.\n\nDesarrollado por LIITEC-ULS (Laboratorio de Investigación e Innovación Tecnológica para la Educación en Ciencias), Universidad de La Serena, Chile\n\nliitec@userena.cl\n\n\nDESARROLLADORES\n\nCristhian Montenegro\nBrandon Muñoz" :
-                (language == MicroverseLanguage.Portuguese ?
-                "Obra de propriedade intelectual da Universidade de La Serena.\n\nDesenvolvido por LIITEC-ULS (Laboratorio de Investigacion e Innovacion Tecnologica para la Educacion en Ciencias), Universidad de La Serena, Chile\n\nliitec@userena.cl\n\n\nDESENVOLVEDORES\n\nCristhian Montenegro\nBrandon Muñoz" :
-                "Work intellectual property of the University of La Serena.\n\nDeveloped by LIITEC-ULS (Laboratorio de Investigacion e Innovacion Tecnologica para la Educacion en Ciencias), Universidad de La Serena, Chile\n\nliitec@userena.cl\n\n\nDEVELOPERS\n\nCristhian Montenegro\nBrandon Muñoz");
+            // Add ScrollRect component to enable scrolling in the credits overlay
+            ScrollRect scroll = subPanel.AddComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
 
-            TextMeshProUGUI bodyText = UiFactory.Text("CreditsBody", subPanel.transform, creditsStr, 22, FontStyles.Normal, new Color(0.3f, 0.35f, 0.4f), TextAlignmentOptions.Center);
+            // Create Viewport with RectMask2D for clipping text
+            GameObject viewport = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D));
+            viewport.transform.SetParent(subPanel.transform, false);
+            RectTransform viewportRect = viewport.GetComponent<RectTransform>();
+            viewportRect.anchorMin = new Vector2(0f, 0f);
+            viewportRect.anchorMax = new Vector2(1f, 1f);
+            viewportRect.pivot = new Vector2(0.5f, 0.5f);
+            viewportRect.offsetMin = new Vector2(40f, 40f);
+            viewportRect.offsetMax = new Vector2(-60f, -140f); // 60px margin on right for scrollbar, 140px on top for title
+
+            // Create Scrollbar for visual scrolling feedback
+            GameObject scrollbarGo = new GameObject("Scrollbar", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Scrollbar));
+            scrollbarGo.transform.SetParent(subPanel.transform, false);
+            RectTransform scrollbarRect = scrollbarGo.GetComponent<RectTransform>();
+            scrollbarRect.anchorMin = new Vector2(1f, 0f);
+            scrollbarRect.anchorMax = new Vector2(1f, 1f);
+            scrollbarRect.pivot = new Vector2(1f, 0.5f);
+            scrollbarRect.anchoredPosition = new Vector2(-12f, 0f);
+            scrollbarRect.sizeDelta = new Vector2(8f, -220f); // vertical height matching viewport
+
+            Image scrollbarBg = scrollbarGo.GetComponent<Image>();
+            scrollbarBg.sprite = RoundedSpriteFactory.RoundedRect(new Color(0.9f, 0.9f, 0.9f, 0.3f), 4);
+            scrollbarBg.type = Image.Type.Sliced;
+
+            GameObject slidingArea = new GameObject("SlidingArea", typeof(RectTransform));
+            slidingArea.transform.SetParent(scrollbarGo.transform, false);
+            UiFactory.Stretch(slidingArea.GetComponent<RectTransform>());
+
+            GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            handleGo.transform.SetParent(slidingArea.transform, false);
+            UiFactory.Stretch(handleGo.GetComponent<RectTransform>());
+
+            Image handleImage = handleGo.GetComponent<Image>();
+            handleImage.sprite = RoundedSpriteFactory.RoundedRect(themeBlue, 4);
+            handleImage.type = Image.Type.Sliced;
+
+            Scrollbar scrollbar = scrollbarGo.GetComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollbar.handleRect = handleGo.GetComponent<RectTransform>();
+
+            scroll.verticalScrollbar = scrollbar;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            scroll.verticalScrollbarSpacing = 6f;
+
+            // Transcribe the full credit string
+            string creditsStr = language == MicroverseLanguage.Spanish ?
+                "Obra propiedad intelectual de la Universidad de La Serena.\n\n" +
+                "Desarrollado por LIITEC-ULS (Laboratorio de Investigación e Innovación Tecnológica para la Educación en Ciencias), Universidad de La Serena, Chile.\n\n" +
+                "liitec@userena.cl\n\n\n" +
+                "EQUIPO DE LIITEC-ULS\n\n" +
+                "Desarrollo\n" +
+                "Brandon Muñoz\n" +
+                "Cristhian Montenegro\n\n" +
+                "Colaboradores\n" +
+                "Profa. Dra. Cassia Fernanda Yano" :
+                (language == MicroverseLanguage.Portuguese ?
+                "Obra de propriedade intelectual da Universidade de La Serena.\n\n" +
+                "Desenvolvido por LIITEC-ULS (Laboratório de Investigação e Inovação Tecnológica para a Educação em Ciências), Universidade de La Serena, Chile.\n\n" +
+                "liitec@userena.cl\n\n\n" +
+                "EQUIPE DO LIITEC-ULS\n\n" +
+                "Desenvolvimento\n" +
+                "Brandon Muñoz\n" +
+                "Cristhian Montenegro\n\n" +
+                "Colaboradores\n" +
+                "Profa. Dra. Cassia Fernanda Yano" :
+                "Work intellectual property of the University of La Serena.\n\n" +
+                "Developed by LIITEC-ULS (Research and Technological Innovation Laboratory for Science Education), University of La Serena, Chile.\n\n" +
+                "liitec@userena.cl\n\n\n" +
+                "LIITEC-ULS TEAM\n\n" +
+                "Development\n" +
+                "Brandon Muñoz\n" +
+                "Cristhian Montenegro\n\n" +
+                "Collaborators\n" +
+                "Prof. Dr. Cassia Fernanda Yano");
+
+            TextMeshProUGUI bodyText = UiFactory.Text("CreditsBody", viewport.transform, creditsStr, 22, FontStyles.Normal, new Color(0.3f, 0.35f, 0.4f), TextAlignmentOptions.Center);
             RectTransform bodyRect = bodyText.rectTransform;
-            bodyRect.anchorMin = new Vector2(0f, 0f);
+            bodyRect.anchorMin = new Vector2(0f, 1f);
             bodyRect.anchorMax = new Vector2(1f, 1f);
-            bodyRect.offsetMin = new Vector2(40f, 40f);
-            bodyRect.offsetMax = new Vector2(-40f, -140f);
-            bodyText.enableAutoSizing = true;
-            bodyText.fontSizeMax = 23;
-            bodyText.fontSizeMin = 14;
+            bodyRect.pivot = new Vector2(0.5f, 1f);
+            bodyRect.anchoredPosition = Vector2.zero;
+            bodyRect.sizeDelta = new Vector2(0f, 0f);
+
+            // Add ContentSizeFitter to dynamically resize text rect based on content length
+            ContentSizeFitter fitter = bodyText.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scroll.viewport = viewportRect;
+            scroll.content = bodyRect;
         }
 
         private void BuildCanvas()

@@ -165,6 +165,12 @@ namespace Microverse.Services
                 return;
             }
 
+            if (LooksLikePrivateSupabaseKey(creds.key))
+            {
+                onError?.Invoke("Supabase key looks private. Use only the public anon/publishable key in mobile builds.");
+                return;
+            }
+
             Debug.Log(logMessage);
 
             // Spawn dynamic coroutine runner to fetch data from Supabase
@@ -381,6 +387,19 @@ namespace Microverse.Services
             request.SetRequestHeader("Authorization", "Bearer " + key);
             request.SetRequestHeader("Accept", "application/json");
             return request;
+        }
+
+        private bool LooksLikePrivateSupabaseKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+
+            string normalizedKey = key.ToLowerInvariant();
+            return normalizedKey.Contains("service_role") ||
+                   normalizedKey.Contains("secret") ||
+                   normalizedKey.StartsWith("sb_secret_");
         }
 
         private Color ParseColor(string hex, Color fallback)

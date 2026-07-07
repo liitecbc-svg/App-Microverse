@@ -42,6 +42,7 @@ namespace Microverse.UI
         private GameObject arLight;
         private Color originalCameraBgColor;
         private CameraClearFlags originalCameraClearFlags;
+        private bool arSafetyWarningShownThisSession;
 
         private void Awake()
         {
@@ -1482,6 +1483,13 @@ namespace Microverse.UI
 
         private void EnterARMode(BiologicalModel model)
         {
+            if (!arSafetyWarningShownThisSession)
+            {
+                arSafetyWarningShownThisSession = true;
+                ShowARSafetyWarning(model);
+                return;
+            }
+
             // 1. Hide the main app UI and navigation bar
             if (screenRoot != null) screenRoot.gameObject.SetActive(false);
             if (navigationBar != null && navigationBar.Root != null) navigationBar.Root.SetActive(false);
@@ -1672,6 +1680,56 @@ namespace Microverse.UI
             labelRect.pivot = new Vector2(0.5f, 0f);
             labelRect.anchoredPosition = new Vector2(0f, 254f);
             labelRect.sizeDelta = new Vector2(800f, 64f);
+        }
+
+        private void ShowARSafetyWarning(BiologicalModel model)
+        {
+            Transform parent = mainCanvasGo != null ? mainCanvasGo.transform : (activeScreen != null ? activeScreen.transform : transform);
+            GameObject modalBg = UiFactory.Panel("ARSafetyWarningModal", parent, new Color(0.01f, 0.03f, 0.08f, 0.88f), 0);
+            modalBg.transform.SetAsLastSibling();
+            RectTransform bgRect = modalBg.GetComponent<RectTransform>();
+            UiFactory.Stretch(bgRect);
+
+            CanvasGroup bgGroup = modalBg.AddComponent<CanvasGroup>();
+            bgGroup.blocksRaycasts = true;
+
+            GameObject dialogPanel = UiFactory.Panel("DialogPanel", modalBg.transform, new Color(0.03f, 0.10f, 0.22f, 0.98f), 24);
+            RectTransform dialogRect = dialogPanel.GetComponent<RectTransform>();
+            dialogRect.anchorMin = new Vector2(0.5f, 0.5f);
+            dialogRect.anchorMax = new Vector2(0.5f, 0.5f);
+            dialogRect.pivot = new Vector2(0.5f, 0.5f);
+            dialogRect.anchoredPosition = Vector2.zero;
+            dialogRect.sizeDelta = new Vector2(720f, 420f);
+
+            TextMeshProUGUI titleText = UiFactory.Text("DialogTitle", dialogPanel.transform, GetUiText("ar.safety.title"), 34, FontStyles.Bold, MicroverseTheme.Cyan, TextAlignmentOptions.Center);
+            RectTransform titleRect = titleText.rectTransform;
+            titleRect.anchorMin = new Vector2(0f, 1f);
+            titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.pivot = new Vector2(0.5f, 1f);
+            titleRect.offsetMin = new Vector2(34f, -92f);
+            titleRect.offsetMax = new Vector2(-34f, -28f);
+
+            TextMeshProUGUI bodyText = UiFactory.Text("DialogBody", dialogPanel.transform, GetUiText("ar.safety.body"), 25, FontStyles.Normal, MicroverseTheme.Text, TextAlignmentOptions.Center);
+            RectTransform bodyRect = bodyText.rectTransform;
+            bodyRect.anchorMin = new Vector2(0f, 0f);
+            bodyRect.anchorMax = new Vector2(1f, 1f);
+            bodyRect.offsetMin = new Vector2(52f, 126f);
+            bodyRect.offsetMax = new Vector2(-52f, -116f);
+            bodyText.enableAutoSizing = true;
+            bodyText.fontSizeMax = 25;
+            bodyText.fontSizeMin = 16;
+
+            Button confirmButton = UiFactory.Button("ConfirmButton", dialogPanel.transform, GetUiText("ar.safety.confirm"), () =>
+            {
+                Destroy(modalBg);
+                EnterARMode(model);
+            }, new Color(0.0f, 0.42f, 0.68f, 0.96f), MicroverseTheme.Text, 24);
+            RectTransform confirmRect = confirmButton.GetComponent<RectTransform>();
+            confirmRect.anchorMin = new Vector2(0.5f, 0f);
+            confirmRect.anchorMax = new Vector2(0.5f, 0f);
+            confirmRect.pivot = new Vector2(0.5f, 0f);
+            confirmRect.anchoredPosition = new Vector2(0f, 34f);
+            confirmRect.sizeDelta = new Vector2(380f, 74f);
         }
 
         private void ExitARMode()

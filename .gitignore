@@ -108,5 +108,7 @@ InitTestScene*.unity*
 
 # Env files and secret configurations
 .env
+*.keystore
+*.jks
 /[Aa]ssets/[Rr]esources/supabase_config.json
 /[Aa]ssets/[Rr]esources/supabase_config.json.meta

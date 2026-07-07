@@ -56,6 +56,12 @@ namespace Microverse.Editor
                     return;
                 }
 
+                if (LooksLikePrivateSupabaseKey(key))
+                {
+                    Debug.LogError("Supabase config was not synchronized because the key looks private. Use only the public anon/publishable key in mobile builds.");
+                    return;
+                }
+
                 // Ensure the Assets/Resources directory exists
                 if (!Directory.Exists(resourcesDir))
                 {
@@ -87,6 +93,19 @@ namespace Microverse.Editor
             {
                 Debug.LogWarning("Failed to automatically sync .env to supabase_config.json: " + ex.Message);
             }
+        }
+
+        private static bool LooksLikePrivateSupabaseKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+
+            string normalizedKey = key.ToLowerInvariant();
+            return normalizedKey.Contains("service_role") ||
+                   normalizedKey.Contains("secret") ||
+                   normalizedKey.StartsWith("sb_secret_");
         }
     }
 }

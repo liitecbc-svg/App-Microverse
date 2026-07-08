@@ -850,6 +850,31 @@ namespace Microverse.UI
             scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
             scroll.verticalScrollbarSpacing = 6f;
 
+            // Create a content container for text and logos
+            GameObject contentGo = new GameObject("CreditsContent", typeof(RectTransform));
+            contentGo.transform.SetParent(viewport.transform, false);
+            RectTransform contentRect = contentGo.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0f, 1f);
+            contentRect.anchorMax = new Vector2(1f, 1f);
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = new Vector2(0f, 0f);
+
+            // Add VerticalLayoutGroup to arrange text and logos sequentially
+            VerticalLayoutGroup layout = contentGo.AddComponent<VerticalLayoutGroup>();
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlHeight = true;
+            layout.childControlWidth = true;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.spacing = 30f;
+            layout.padding = new RectOffset(0, 0, 10, 40);
+
+            // Add ContentSizeFitter to dynamically adjust height of content container
+            ContentSizeFitter contentFitter = contentGo.AddComponent<ContentSizeFitter>();
+            contentFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
             // Transcribe the full credit string
             string creditsStr = language == MicroverseLanguage.Spanish ?
                 "Obra propiedad intelectual de la Universidad de La Serena.\n\n" +
@@ -881,21 +906,44 @@ namespace Microverse.UI
                 "Collaborators\n" +
                 "Prof. Dr. Cassia Fernanda Yano");
 
-            TextMeshProUGUI bodyText = UiFactory.Text("CreditsBody", viewport.transform, creditsStr, 22, FontStyles.Normal, new Color(0.3f, 0.35f, 0.4f), TextAlignmentOptions.Center);
-            RectTransform bodyRect = bodyText.rectTransform;
-            bodyRect.anchorMin = new Vector2(0f, 1f);
-            bodyRect.anchorMax = new Vector2(1f, 1f);
-            bodyRect.pivot = new Vector2(0.5f, 1f);
-            bodyRect.anchoredPosition = Vector2.zero;
-            bodyRect.sizeDelta = new Vector2(0f, 0f);
+            TextMeshProUGUI bodyText = UiFactory.Text("CreditsBody", contentGo.transform, creditsStr, 22, FontStyles.Normal, new Color(0.3f, 0.35f, 0.4f), TextAlignmentOptions.Center);
+            
+            // Create horizontal container for logos
+            GameObject logosGo = new GameObject("LogosContainer", typeof(RectTransform));
+            logosGo.transform.SetParent(contentGo.transform, false);
 
-            // Add ContentSizeFitter to dynamically resize text rect based on content length
-            ContentSizeFitter fitter = bodyText.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            HorizontalLayoutGroup horizontalLayout = logosGo.AddComponent<HorizontalLayoutGroup>();
+            horizontalLayout.childAlignment = TextAnchor.MiddleCenter;
+            horizontalLayout.childControlHeight = false;
+            horizontalLayout.childControlWidth = false;
+            horizontalLayout.childForceExpandHeight = false;
+            horizontalLayout.childForceExpandWidth = false;
+            horizontalLayout.spacing = 60f;
+
+            LayoutElement logosLayout = logosGo.AddComponent<LayoutElement>();
+            logosLayout.preferredHeight = 125f;
+            logosLayout.preferredWidth = 500f;
+
+            // Load ULS Logo
+            Texture2D ulsTex = Resources.Load<Texture2D>("AppLogo/logo-uls");
+            if (ulsTex != null)
+            {
+                Sprite ulsSprite = Sprite.Create(ulsTex, new Rect(0, 0, ulsTex.width, ulsTex.height), new Vector2(0.5f, 0.5f));
+                Image ulsImg = UiFactory.Image("UlsLogo", logosGo.transform, ulsSprite, Color.white);
+                ulsImg.rectTransform.sizeDelta = new Vector2(120f, 120f);
+            }
+
+            // Load LIITEC Logo
+            Texture2D liitecTex = Resources.Load<Texture2D>("AppLogo/logo-liitec");
+            if (liitecTex != null)
+            {
+                Sprite liitecSprite = Sprite.Create(liitecTex, new Rect(0, 0, liitecTex.width, liitecTex.height), new Vector2(0.5f, 0.5f));
+                Image liitecImg = UiFactory.Image("LiitecLogo", logosGo.transform, liitecSprite, Color.white);
+                liitecImg.rectTransform.sizeDelta = new Vector2(213f, 120f); // Keep aspect ratio (213:120 is roughly 16:9)
+            }
 
             scroll.viewport = viewportRect;
-            scroll.content = bodyRect;
+            scroll.content = contentRect;
         }
 
         private void BuildCanvas()

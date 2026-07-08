@@ -8,17 +8,31 @@ using UnityEngine;
 
 namespace Microverse.Editor
 {
-    public static class PlayStoreBuild
+    public class PlayStoreBuild : IPreprocessBuildWithReport
     {
+        public int callbackOrder => 0;
+
+        public void OnPreprocessBuild(BuildReport report)
+        {
+            if (report.summary.platform == BuildTarget.Android)
+            {
+                ConfigureAndroidPlayerSettings();
+                AssetDatabase.SaveAssets();
+            }
+        }
+
         private const string PackageName = "com.microverse.app";
         private const string ProductName = "Microverse";
         private const string MainScene = "Assets/Scenes/SampleScene.unity";
         private const string AppIcon = "Assets/Microverse/Resources/AppLogo/microverse-logo-main.png";
+        private const string AppIconBackground = "Assets/Microverse/Resources/AppLogo/microverse-logo-background.png";
+        private const string AppIconForeground = "Assets/Microverse/Resources/AppLogo/microverse-logo-foreground.png";
 
         [MenuItem("Microverse/Android/Configure Play Store Settings")]
         public static void ConfigurePlayStoreSettings()
         {
             ConfigureAndroidPlayerSettings();
+            AssetDatabase.SaveAssets();
             Debug.Log("Microverse Android Play Store settings configured.");
         }
 
@@ -34,6 +48,7 @@ namespace Microverse.Editor
             ConfigureAndroidPlayerSettings();
             ApplyCommandLineVersion();
             ApplySigningFromEnvironment(requireSigning: true);
+            AssetDatabase.SaveAssets();
 
             string outputDirectory = Path.Combine("Builds", "Android");
             Directory.CreateDirectory(outputDirectory);
@@ -97,14 +112,44 @@ namespace Microverse.Editor
                 return;
             }
 
-            int iconCount = PlayerSettings.GetIconSizes(NamedBuildTarget.Android, IconKind.Application).Length;
+            var platform = NamedBuildTarget.Android;
+
+            // 1. Set legacy/standard icons (IconKind.Application)
+            int iconCount = PlayerSettings.GetIconSizes(platform, IconKind.Application).Length;
             Texture2D[] icons = new Texture2D[iconCount];
             for (int i = 0; i < icons.Length; i++)
             {
                 icons[i] = icon;
             }
+            PlayerSettings.SetIcons(platform, icons, IconKind.Application);
 
-            PlayerSettings.SetIcons(NamedBuildTarget.Android, icons, IconKind.Application);
+            // 2. Set round icons (AndroidPlatformIconKind.Round)
+            var roundKind = UnityEditor.Android.AndroidPlatformIconKind.Round;
+            PlatformIcon[] roundIcons = PlayerSettings.GetPlatformIcons(platform, roundKind);
+            for (int i = 0; i < roundIcons.Length; i++)
+            {
+                roundIcons[i].SetTextures(new Texture2D[] { icon });
+            }
+            PlayerSettings.SetPlatformIcons(platform, roundKind, roundIcons);
+
+            // 3. Set adaptive icons (AndroidPlatformIconKind.Adaptive)
+            Texture2D bgIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconBackground);
+            Texture2D fgIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconForeground);
+            if (bgIcon != null && fgIcon != null)
+            {
+                var adaptiveKind = UnityEditor.Android.AndroidPlatformIconKind.Adaptive;
+                PlatformIcon[] adaptiveIcons = PlayerSettings.GetPlatformIcons(platform, adaptiveKind);
+                for (int i = 0; i < adaptiveIcons.Length; i++)
+                {
+                    adaptiveIcons[i].SetTextures(new Texture2D[] { bgIcon, fgIcon });
+                }
+                PlayerSettings.SetPlatformIcons(platform, adaptiveKind, adaptiveIcons);
+                Debug.Log("Adaptive icons (foreground/background) successfully configured.");
+            }
+            else
+            {
+                Debug.LogWarning("Adaptive icon layers (background/foreground) not found at paths. Skipping adaptive icon configuration.");
+            }
         }
 
         private static void ApplyCommandLineVersion()

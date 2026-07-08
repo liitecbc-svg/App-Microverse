@@ -111,6 +111,92 @@ namespace Microverse.UI
             }
         }
 
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                HandleNativeBack();
+            }
+        }
+
+        private void HandleNativeBack()
+        {
+            if (CloseActiveOverlay())
+            {
+                return;
+            }
+
+            if (arOverlayCanvas != null || arBackgroundCanvas != null || arModelInstance != null)
+            {
+                ExitARMode();
+                return;
+            }
+
+            if (activeTab == "start")
+            {
+                Application.Quit();
+                return;
+            }
+
+            if (activeTab == "scan")
+            {
+                ShowHome();
+                return;
+            }
+
+            if (activeTab == "visualization" ||
+                activeTab == "library" ||
+                activeTab == "favorites" ||
+                activeTab == "categories" ||
+                activeTab == "profile")
+            {
+                ShowStartScreen();
+                return;
+            }
+
+            ShowStartScreen();
+        }
+
+        private bool CloseActiveOverlay()
+        {
+            if (translationPreparationDialog != null)
+            {
+                CancelTranslationModelPreparation();
+                return true;
+            }
+
+            if (TryDestroyChild(mainCanvasGo != null ? mainCanvasGo.transform : null, "ARSafetyWarningModal"))
+            {
+                return true;
+            }
+
+            if (TryDestroyChild(activeScreen != null ? activeScreen.transform : null, "ARSafetyWarningModal") ||
+                TryDestroyChild(activeScreen != null ? activeScreen.transform : null, "InstructionsOverlay") ||
+                TryDestroyChild(activeScreen != null ? activeScreen.transform : null, "SideMenuOverlay"))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryDestroyChild(Transform parent, string childName)
+        {
+            if (parent == null)
+            {
+                return false;
+            }
+
+            Transform child = parent.Find(childName);
+            if (child == null)
+            {
+                return false;
+            }
+
+            Destroy(child.gameObject);
+            return true;
+        }
+
         private void ShowStartScreen()
         {
             activeTab = "start";

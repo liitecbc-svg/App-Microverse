@@ -929,7 +929,7 @@ namespace Microverse.UI
             if (ulsTex != null)
             {
                 Sprite ulsSprite = Sprite.Create(ulsTex, new Rect(0, 0, ulsTex.width, ulsTex.height), new Vector2(0.5f, 0.5f));
-                Image ulsImg = UiFactory.Image("UlsLogo", logosGo.transform, ulsSprite, Color.white);
+                Image ulsImg = UiFactory.Image("UlsLogo", logosGo.transform, ulsSprite, themeBlue);
                 ulsImg.rectTransform.sizeDelta = new Vector2(120f, 120f);
             }
 

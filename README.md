@@ -209,4 +209,5 @@ Instituciones y colaboradores visibles dentro de la app:
 
 - Universidad de La Serena
 - LIITEC
-- Equipo de desarrollo Microverse
+- Cristhian Montenegro
+- Brandon Muñoz

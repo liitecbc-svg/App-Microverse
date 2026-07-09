@@ -1,3 +1,18 @@
+/**
+ * LongPressTrigger.cs
+ *
+ * Detecta pulsaciones largas sobre elementos UI para acciones secundarias como eliminar modelos descargados.
+ *
+ * Main responsibilities:
+ * - Medir el tiempo de presion del puntero.
+ * - Cancelar la deteccion al soltar o salir del elemento.
+ * - Emitir un UnityEvent cuando se cumple la duracion configurada.
+ *
+ * Related elements:
+ * - ModelCardView
+ * - UnityEvent
+ * - IPointerDownHandler
+ */
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;

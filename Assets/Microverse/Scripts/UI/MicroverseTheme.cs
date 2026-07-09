@@ -1,3 +1,18 @@
+/**
+ * MicroverseTheme.cs
+ *
+ * Define la paleta visual compartida por los componentes de interfaz de Microverse.
+ *
+ * Main responsibilities:
+ * - Centralizar colores de fondo, paneles y textos.
+ * - Mantener consistencia entre pantallas y controles.
+ * - Evitar valores de color duplicados en la UI.
+ *
+ * Related elements:
+ * - UiFactory
+ * - ModelCardView
+ * - HomeScreenView
+ */
 using UnityEngine;
 
 namespace Microverse.UI

@@ -1,3 +1,18 @@
+/**
+ * ModelCardView.cs
+ *
+ * Construye la tarjeta visual de cada modelo en catalogos, favoritos y categorias.
+ *
+ * Main responsibilities:
+ * - Mostrar preview, nombre, subtitulo y estado favorito.
+ * - Administrar botones de descarga y progreso por modelo.
+ * - Permitir eliminar modelos descargados mediante pulsacion larga.
+ *
+ * Related elements:
+ * - BiologicalModel
+ * - FavoriteModelsStore
+ * - ModelDownloadStore
+ */
 using System;
 using Microverse.Data;
 using Microverse.Services;

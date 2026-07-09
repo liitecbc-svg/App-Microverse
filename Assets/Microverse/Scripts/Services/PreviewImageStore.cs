@@ -1,3 +1,18 @@
+/**
+ * PreviewImageStore.cs
+ *
+ * Administra la cache local de imagenes preview para que los modelos descargados mantengan su vista previa sin conexion.
+ *
+ * Main responsibilities:
+ * - Guardar previews remotas como archivos PNG persistentes.
+ * - Cargar sprites desde rutas locales o referencias cacheadas.
+ * - Evitar descargas repetidas cuando ya existe una preview local.
+ *
+ * Related elements:
+ * - BiologyVisualFactory
+ * - ModelDownloadStore
+ * - Application.persistentDataPath
+ */
 using System.Collections;
 using System.IO;
 using Microverse.Data;

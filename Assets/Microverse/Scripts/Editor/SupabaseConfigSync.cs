@@ -1,3 +1,18 @@
+/**
+ * SupabaseConfigSync.cs
+ *
+ * Sincroniza credenciales publicas de Supabase desde .env hacia Resources para que Unity pueda usarlas en runtime.
+ *
+ * Main responsibilities:
+ * - Leer SUPABASE_URL y clave anonima desde el archivo .env.
+ * - Evitar copiar claves privadas o secretas al build movil.
+ * - Crear o actualizar supabase_config.json dentro de Assets/Resources.
+ *
+ * Related elements:
+ * - SupabaseModelCatalogService
+ * - Assets/Resources/supabase_config.json
+ * - .env
+ */
 #if UNITY_EDITOR
 using System;
 using System.IO;

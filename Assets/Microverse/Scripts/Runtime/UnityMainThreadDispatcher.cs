@@ -1,3 +1,18 @@
+/**
+ * UnityMainThreadDispatcher.cs
+ *
+ * Ejecuta acciones en el hilo principal de Unity para callbacks que llegan desde servicios nativos o procesos asincronos.
+ *
+ * Main responsibilities:
+ * - Mantener una cola segura de acciones pendientes.
+ * - Crear una instancia persistente cuando se necesite.
+ * - Procesar callbacks durante Update para tocar objetos de Unity de forma segura.
+ *
+ * Related elements:
+ * - AndroidMlKitTranslationService
+ * - MlKitTranslationCallback
+ * - MicroverseBootstrap
+ */
 using System;
 using System.Collections.Generic;
 using UnityEngine;

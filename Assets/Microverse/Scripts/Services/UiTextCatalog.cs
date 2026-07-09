@@ -1,3 +1,18 @@
+/**
+ * UiTextCatalog.cs
+ *
+ * Centraliza los textos de interfaz de Microverse y sus traducciones disponibles.
+ *
+ * Main responsibilities:
+ * - Guardar claves y textos base en ingles.
+ * - Entregar traducciones para espanol y portugues.
+ * - Permitir actualizar textos traducidos desde resultados automaticos.
+ *
+ * Related elements:
+ * - MicroverseApp
+ * - MicroverseLanguage
+ * - ITranslationService
+ */
 using System.Collections.Generic;
 using Microverse.Data;
 

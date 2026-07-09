@@ -1,3 +1,18 @@
+/**
+ * FavoriteModelsStore.cs
+ *
+ * Guarda y consulta los modelos marcados como favoritos por el usuario usando PlayerPrefs.
+ *
+ * Main responsibilities:
+ * - Cargar IDs favoritos de forma diferida.
+ * - Alternar el estado favorito de un modelo.
+ * - Persistir la seleccion para futuras sesiones.
+ *
+ * Related elements:
+ * - ModelCardView
+ * - HomeScreenView
+ * - PlayerPrefs
+ */
 using System.Collections.Generic;
 using UnityEngine;
 

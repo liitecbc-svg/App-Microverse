@@ -1,3 +1,18 @@
+/**
+ * MicroverseApp.cs
+ *
+ * Controla el flujo principal de Microverse, desde la pantalla inicial hasta catalogo, traducciones, creditos y modo AR.
+ *
+ * Main responsibilities:
+ * - Construir el canvas raiz y coordinar navegacion entre pantallas.
+ * - Cargar catalogos locales/remotos y aplicar traducciones de interfaz y contenido.
+ * - Entrar y salir del visor AR/3D con camara, modelos, overlays y advertencia de seguridad.
+ *
+ * Related elements:
+ * - CompositeModelCatalogService
+ * - HomeScreenView
+ * - WebCamCameraBackground
+ */
 using System;
 using System.Collections;
 using System.Collections.Generic;

@@ -1,3 +1,18 @@
+/**
+ * CompositeModelCatalogService.cs
+ *
+ * Combina el catalogo local, el catalogo remoto y los modelos descargados para presentar una lista unificada de contenido.
+ *
+ * Main responsibilities:
+ * - Cargar primero modelos incluidos para mantener la app util sin conexion.
+ * - Mezclar datos remotos sin reemplazar modelos incluidos protegidos.
+ * - Reincorporar modelos descargados y sus categorias al iniciar.
+ *
+ * Related elements:
+ * - LocalModelCatalogService
+ * - SupabaseModelCatalogService
+ * - ModelDownloadStore
+ */
 using System;
 using System.Collections.Generic;
 using Microverse.Data;

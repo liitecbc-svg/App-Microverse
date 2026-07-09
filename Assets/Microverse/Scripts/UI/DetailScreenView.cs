@@ -1,3 +1,18 @@
+/**
+ * DetailScreenView.cs
+ *
+ * Presenta la ficha detallada de un modelo biologico con carrusel, descripcion y acceso a visualizacion 3D/AR.
+ *
+ * Main responsibilities:
+ * - Mostrar nombre, subtitulo, imagen y descripcion del modelo activo.
+ * - Permitir navegar entre modelos del catalogo.
+ * - Disparar la apertura del modelo en el visor AR/3D.
+ *
+ * Related elements:
+ * - BiologicalModel
+ * - MicroverseApp
+ * - BiologyVisualFactory
+ */
 using System;
 using System.Collections.Generic;
 using Microverse.Data;

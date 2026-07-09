@@ -1,3 +1,18 @@
+/**
+ * ModelDownloadStore.cs
+ *
+ * Gestiona la descarga, persistencia y recuperacion offline de modelos 3D obtenidos desde el catalogo remoto.
+ *
+ * Main responsibilities:
+ * - Descargar archivos de modelos y previews remotas.
+ * - Guardar rutas y metadatos descargados en PlayerPrefs.
+ * - Permitir borrar modelos descargados y reconstruir el catalogo offline.
+ *
+ * Related elements:
+ * - PreviewImageStore
+ * - CompositeModelCatalogService
+ * - HomeScreenView
+ */
 using System;
 using System.Collections;
 using System.Collections.Generic;

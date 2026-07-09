@@ -1,3 +1,18 @@
+/**
+ * LocalModelCatalogService.cs
+ *
+ * Entrega el catalogo base incluido dentro de la aplicacion para que Microverse funcione sin conexion.
+ *
+ * Main responsibilities:
+ * - Declarar modelos demo empaquetados como recursos locales.
+ * - Resolver categorias locales desde los modelos incluidos.
+ * - Responder inmediatamente a solicitudes de carga del catalogo local.
+ *
+ * Related elements:
+ * - BiologicalModel
+ * - CompositeModelCatalogService
+ * - Resources/Models
+ */
 using System.Collections.Generic;
 using Microverse.Data;
 using UnityEngine;

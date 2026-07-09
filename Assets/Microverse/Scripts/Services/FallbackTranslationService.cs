@@ -1,3 +1,18 @@
+/**
+ * FallbackTranslationService.cs
+ *
+ * Implementa una traduccion de respaldo que conserva el texto original cuando la traduccion automatica no esta disponible.
+ *
+ * Main responsibilities:
+ * - Cumplir el contrato de ITranslationService en editor o plataformas no soportadas.
+ * - Responder exitosamente a la preparacion offline sin descargar modelos.
+ * - Devolver los textos originales para no bloquear la UI.
+ *
+ * Related elements:
+ * - ITranslationService
+ * - AndroidMlKitTranslationService
+ * - TranslationRequest
+ */
 using System;
 using System.Collections.Generic;
 

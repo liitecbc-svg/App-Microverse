@@ -1,3 +1,18 @@
+/**
+ * UiFactory.cs
+ *
+ * Provee constructores reutilizables para crear UI de Microverse por codigo.
+ *
+ * Main responsibilities:
+ * - Crear paneles, textos, botones, imagenes e inputs consistentes.
+ * - Configurar autoajuste de etiquetas en botones.
+ * - Aplicar helpers de anclaje, estiramiento y colores de interaccion.
+ *
+ * Related elements:
+ * - RoundedSpriteFactory
+ * - MicroverseTheme
+ * - TextMeshProUGUI
+ */
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;

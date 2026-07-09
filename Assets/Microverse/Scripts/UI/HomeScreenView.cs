@@ -1,3 +1,18 @@
+/**
+ * HomeScreenView.cs
+ *
+ * Construye la pantalla de catalogo principal con busqueda, filtros, favoritos, descargas y tarjetas de modelos.
+ *
+ * Main responsibilities:
+ * - Filtrar modelos por modo, categoria y busqueda.
+ * - Actualizar progreso de descarga por tarjeta sin reconstruir toda la UI.
+ * - Coordinar apertura, descarga y favoritos desde el catalogo.
+ *
+ * Related elements:
+ * - ModelCardView
+ * - ModelDownloadStore
+ * - FavoriteModelsStore
+ */
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,3 +1,18 @@
+/**
+ * AndroidMlKitTranslationService.cs
+ *
+ * Conecta la aplicacion con el puente Android de ML Kit para preparar modelos offline y traducir textos por lote.
+ *
+ * Main responsibilities:
+ * - Solicitar descarga/preparacion de modelos de traduccion.
+ * - Traducir lotes de textos usando callbacks nativos.
+ * - Usar un fallback local cuando no se ejecuta en Android real.
+ *
+ * Related elements:
+ * - ITranslationService
+ * - MlKitTranslationCallback
+ * - UnityMainThreadDispatcher
+ */
 using System;
 using System.Collections.Generic;
 using Microverse.Runtime;

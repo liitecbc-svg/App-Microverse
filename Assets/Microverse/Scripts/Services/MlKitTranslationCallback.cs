@@ -1,3 +1,18 @@
+/**
+ * MlKitTranslationCallback.cs
+ *
+ * Adapta los callbacks del puente Android de ML Kit hacia acciones C# usadas por la aplicacion.
+ *
+ * Main responsibilities:
+ * - Recibir traducciones exitosas desde Java/Kotlin.
+ * - Propagar errores de traduccion hacia Unity.
+ * - Mantener desacoplado el servicio Android del callback nativo.
+ *
+ * Related elements:
+ * - AndroidMlKitTranslationService
+ * - ITranslationService
+ * - UnityMainThreadDispatcher
+ */
 using System;
 using UnityEngine;
 

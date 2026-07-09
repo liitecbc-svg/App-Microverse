@@ -1,3 +1,18 @@
+/**
+ * ModelManipulator.cs
+ *
+ * Permite manipular modelos 3D con gestos tactiles o mouse dentro del visor.
+ *
+ * Main responsibilities:
+ * - Rotar el modelo con arrastre de un dedo o mouse.
+ * - Escalar el modelo con pellizco o rueda del mouse.
+ * - Limitar el zoom para mantener una interaccion controlada.
+ *
+ * Related elements:
+ * - MicroverseApp
+ * - Input
+ * - Transform
+ */
 using UnityEngine;
 
 namespace Microverse.UI

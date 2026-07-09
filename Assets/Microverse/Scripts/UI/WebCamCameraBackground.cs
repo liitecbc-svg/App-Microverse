@@ -1,3 +1,18 @@
+/**
+ * WebCamCameraBackground.cs
+ *
+ * Muestra la camara del dispositivo como fondo del modo AR usando WebCamTexture y un fallback visual.
+ *
+ * Main responsibilities:
+ * - Solicitar permisos y probar configuraciones de camara disponibles.
+ * - Ajustar rotacion, espejo y escala para llenar la vista AR.
+ * - Mostrar un fondo de simulacion cuando la camara no inicia.
+ *
+ * Related elements:
+ * - MicroverseApp
+ * - RawImage
+ * - WebCamTexture
+ */
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;

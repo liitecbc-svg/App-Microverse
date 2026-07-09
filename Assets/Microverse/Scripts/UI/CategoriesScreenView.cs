@@ -1,3 +1,18 @@
+/**
+ * CategoriesScreenView.cs
+ *
+ * Muestra los modelos disponibles agrupados por categoria en filas desplazables.
+ *
+ * Main responsibilities:
+ * - Construir el encabezado y el listado de categorias.
+ * - Filtrar modelos no disponibles para uso local/AR.
+ * - Crear tarjetas de modelo dentro de cada fila horizontal.
+ *
+ * Related elements:
+ * - ModelCardView
+ * - ModelDownloadStore
+ * - BiologicalModel
+ */
 using System;
 using System.Collections.Generic;
 using Microverse.Data;

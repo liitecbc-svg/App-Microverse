@@ -1,3 +1,18 @@
+/**
+ * PlayStoreBuild.cs
+ *
+ * Automatiza la configuracion y construccion Android orientada a publicar Microverse en Play Store.
+ *
+ * Main responsibilities:
+ * - Aplicar package name, version, SDK, IL2CPP, escenas e iconos Android.
+ * - Leer versionado y firma desde variables de entorno.
+ * - Generar un AAB de release desde el menu o linea de comandos.
+ *
+ * Related elements:
+ * - PlayerSettings
+ * - EditorBuildSettings
+ * - Microverse/Android menu
+ */
 #if UNITY_EDITOR
 using System;
 using System.IO;

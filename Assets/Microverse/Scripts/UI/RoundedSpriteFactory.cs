@@ -1,3 +1,18 @@
+/**
+ * RoundedSpriteFactory.cs
+ *
+ * Genera sprites reutilizables para paneles, circulos y bordes redondeados usados por la interfaz.
+ *
+ * Main responsibilities:
+ * - Crear texturas procedurales con esquinas redondeadas.
+ * - Cachear sprites por color, tamano y radio.
+ * - Proveer formas base para botones, paneles e indicadores.
+ *
+ * Related elements:
+ * - UiFactory
+ * - MicroverseTheme
+ * - UnityEngine.UI.Image
+ */
 using System.Collections.Generic;
 using UnityEngine;
 

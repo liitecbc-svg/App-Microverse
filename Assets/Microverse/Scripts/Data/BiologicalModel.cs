@@ -1,3 +1,18 @@
+/**
+ * BiologicalModel.cs
+ *
+ * Representa un modelo biologico disponible en la aplicacion, incluyendo textos localizados, colores, rutas de archivos y estado de contenido incluido.
+ *
+ * Main responsibilities:
+ * - Centralizar los datos que describen cada modelo 3D o procedimental.
+ * - Guardar referencias a previews, modelos descargables o recursos incluidos.
+ * - Exponer metadatos visuales usados por la UI y por el visor AR.
+ *
+ * Related elements:
+ * - LocalizedText
+ * - IModelCatalogService
+ * - BiologyVisualFactory
+ */
 using UnityEngine;
 
 namespace Microverse.Data

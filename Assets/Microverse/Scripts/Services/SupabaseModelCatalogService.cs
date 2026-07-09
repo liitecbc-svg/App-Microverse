@@ -1,3 +1,18 @@
+/**
+ * SupabaseModelCatalogService.cs
+ *
+ * Carga categorias y modelos 3D desde Supabase usando la API REST configurada para Microverse.
+ *
+ * Main responsibilities:
+ * - Leer credenciales desde .env o Resources/supabase_config.json.
+ * - Consultar tablas remotas de categorias y modelos.
+ * - Convertir registros de Supabase a BiologicalModel con metadatos visuales.
+ *
+ * Related elements:
+ * - IModelCatalogService
+ * - CompositeModelCatalogService
+ * - SupabaseConfigSync
+ */
 using System;
 using System.Collections;
 using System.Collections.Generic;

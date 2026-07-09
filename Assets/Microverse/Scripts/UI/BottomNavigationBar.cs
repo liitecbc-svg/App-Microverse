@@ -1,3 +1,18 @@
+/**
+ * BottomNavigationBar.cs
+ *
+ * Construye y actualiza la barra inferior de navegacion usada por las pantallas principales.
+ *
+ * Main responsibilities:
+ * - Crear tabs de visualizacion, biblioteca y favoritos.
+ * - Marcar visualmente la seccion seleccionada.
+ * - Refrescar etiquetas cuando cambia el idioma.
+ *
+ * Related elements:
+ * - MicroverseApp
+ * - UiFactory
+ * - UiTextCatalog
+ */
 using System;
 using System.Collections.Generic;
 using TMPro;

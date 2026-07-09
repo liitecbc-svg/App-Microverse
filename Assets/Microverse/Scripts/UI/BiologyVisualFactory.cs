@@ -1,3 +1,18 @@
+/**
+ * BiologyVisualFactory.cs
+ *
+ * Genera y carga recursos visuales para fondos, tarjetas y previews de modelos biologicos.
+ *
+ * Main responsibilities:
+ * - Crear sprites procedurales cuando no existe preview real.
+ * - Cargar previews desde Resources o cache persistente.
+ * - Descargar y almacenar previews remotas para uso offline.
+ *
+ * Related elements:
+ * - BiologicalModel
+ * - PreviewImageStore
+ * - ModelCardView
+ */
 using System.Collections.Generic;
 using Microverse.Data;
 using Microverse.Services;

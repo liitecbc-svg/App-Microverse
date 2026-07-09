@@ -1,3 +1,18 @@
+/**
+ * LocalizedText.cs
+ *
+ * Administra valores de texto en espanol, ingles y portugues para nombres, categorias y descripciones del catalogo.
+ *
+ * Main responsibilities:
+ * - Resolver el texto mas adecuado segun el idioma activo.
+ * - Permitir actualizar traducciones en tiempo de ejecucion.
+ * - Entregar un fallback cuando falta una traduccion especifica.
+ *
+ * Related elements:
+ * - MicroverseLanguage
+ * - UiTextCatalog
+ * - BiologicalModel
+ */
 namespace Microverse.Data
 {
     [System.Serializable]

@@ -28,7 +28,6 @@ La aplicacion combina modelos incluidos dentro del build, contenido remoto admin
 - **uGUI / TextMeshPro**
 - **Supabase REST API**
 - **Google ML Kit Translate**
-- **glTFast** para carga runtime de modelos `.glb` y `.gltf`
 - **Android App Bundle** para distribucion en Google Play
 
 ## Arquitectura general
@@ -95,8 +94,6 @@ La app lee la configuracion desde:
 .env
 Assets/Resources/supabase_config.json
 ```
-
-> Importante: solo debe usarse una llave publica anon/publishable de Supabase. Nunca incluir `service_role`, claves privadas o secretos administrativos dentro de una app movil.
 
 ## Modelos incluidos y modo offline
 

@@ -211,3 +211,4 @@ Instituciones y colaboradores visibles dentro de la app:
 - LIITEC
 - Cristhian Montenegro
 - Brandon Muñoz
+- Dra. Cassia Yano
